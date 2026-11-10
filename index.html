@@ -110,7 +110,12 @@ const fetchJ=async p=>{const r=await fetch(enc(p),{cache:'no-store'});if(!r.ok)t
 const fetchT=async p=>{const r=await fetch(enc(p),{cache:'no-store'});if(!r.ok)throw new Error(p+' '+r.status);return r.text()};
 const ROOT='整理/';
 let INDEX=[];
-const SPECIAL=[{id:'overview',name:'總覽與規則'},{id:'cult',name:'養成參考'},{id:'partner',name:'夥伴圖鑑'},{id:'dress',name:'時裝圖鑑'},{id:'pet',name:'寵物圖鑑'},{id:'ability',name:'能力(學習)'},{id:'item',name:'道具查詢'},{id:'doc',name:'欄位說明'}];
+const CODEX_PAGES=[{id:'partner',name:'夥伴圖鑑'},{id:'pet',name:'寵物圖鑑'},{id:'dress',name:'時裝圖鑑'},
+  {id:'guardian',name:'珍寶圖鑑'},{id:'collect',name:'珍藏圖鑑'},{id:'car',name:'坐騎圖鑑'},
+  {id:'ability',name:'能力(學習)'},{id:'item',name:'道具查詢'}];
+const GROWTH_PAGES=[{id:'cult',name:'夥伴養成'},{id:'g_寵物',name:'寵物養成'},{id:'g_時裝',name:'時裝養成'},
+  {id:'g_珍寶',name:'珍寶養成'},{id:'g_珍藏',name:'珍藏養成'},{id:'g_坐騎',name:'坐騎養成'}];
+const SPECIAL=[{id:'overview',name:'總覽與規則'},...CODEX_PAGES,...GROWTH_PAGES,{id:'doc',name:'欄位說明'}];
 
 const yn=v=>v===null||v===undefined?'<span class="nul">null</span>':v===true?'<span class="ok">有</span>':v===false?'<span class="no">無</span>':esc(v);
 const fmtReq=l=>(l||[]).map(x=>`${esc(x.項目??x.道具)}${x.數量??''}${x.單位??''}`).join('、');
@@ -337,6 +342,68 @@ async function renderAbilities(){
   return h+`</section>`;
 }
 
+async function renderGuardian(){
+  const d=await codex('珍寶');
+  let h=`<div class="hdr"><h2>珍寶圖鑑</h2><span class="chip">${d.數量} 件</span></div><p class="sub">${esc(d.說明)}</p>`;
+  h+=`<section>${searchBox('搜尋珍寶 / 定位 / 綁定夥伴…')} <span class="codex-count sub"></span>
+    <table><thead><tr><th>名稱</th><th>品質</th><th>階</th><th>定位</th><th>綁定夥伴</th><th class="num">基礎戰力</th><th>啟動屬性</th><th>分解可得</th></tr></thead><tbody>`;
+  for(const g of d.珍寶){
+    const bind=(g.綁定夥伴||[]).join('、')||'通用';
+    h+=`<tr data-k="${esc([g.名稱,g.品質,g.定位,bind].join(' ').toLowerCase())}"><td><b>${esc(g.名稱)}</b></td><td>${esc(g.品質)}</td><td>${g.階??''}</td><td>${esc(g.定位||'')}</td><td>${esc(bind)}${g.專屬?' <span class="chip">專屬</span>':''}</td><td class="num">${g.基礎戰力??''}</td><td>${esc(g.啟動屬性||'')}</td><td class="sub">${esc(g.分解可得||'')}</td></tr>`;
+  }
+  return h+`</tbody></table></section>`;
+}
+
+async function renderCollect(){
+  const d=await codex('珍藏');
+  let h=`<div class="hdr"><h2>珍藏圖鑑</h2><span class="chip">${d.數量} 件</span><span class="chip">${d.羈絆?.length||0} 組羈絆</span></div><p class="sub">${esc(d.說明)}</p>`;
+  h+=`<section>${searchBox('搜尋珍藏 / 傳記…')} <span class="codex-count sub"></span>`;
+  for(const c of d.珍藏){
+    const k=[c.名稱,c.品質,c.說明||''].join(' ').toLowerCase();
+    h+=`<details data-k="${esc(k)}"><summary><b>${esc(c.名稱)}</b> <span class="chip acc">${esc(c.品質)}</span>${c.碎片?`<span class="chip">${esc(c.碎片)}/星</span>`:''}</summary>
+      ${c.說明?`<p class="sub">${esc(c.說明)}</p>`:''}
+      <h4 style="margin:12px 0 6px">星級(累計屬性)</h4>${tableFromObjs((c.星級||[]).map(s=>({星:s.星,消耗:s.消耗||'—',累計屬性:s.累計屬性||'—'})))}
+      ${c.傳記?.length?`<h4 style="margin:12px 0 6px">傳記</h4>${tableFromObjs(c.傳記.map(b=>({章:b.章,解鎖:`${b.解鎖星數}星`,標題:b.標題,內容:b.內容,獎勵:b.獎勵||''})))}`:''}</details>`;
+  }
+  if(d.羈絆?.length) h+=`<h4 style="margin:14px 0 6px">羈絆</h4>${tableFromObjs(d.羈絆.map(b=>({名稱:b.名稱,分類:b.分類||'',需要件數:b.需要件數,包含:(b.包含珍藏||b.包含珍寶||[]).join('、'),各級加成:(b.等級||[]).map(l=>`${l.級}級 ${l.屬性}`).join(' / ')})))}`;
+  return h+`</section>`;
+}
+
+async function renderCar(){
+  const d=await codex('坐騎');
+  let h=`<div class="hdr"><h2>坐騎圖鑑</h2><span class="chip">${d.數量} 台</span></div><p class="sub">${esc(d.說明)}</p>`;
+  h+=`<section>${searchBox('搜尋坐騎…')} <span class="codex-count sub"></span>`;
+  for(const c of d.坐騎){
+    h+=`<details data-k="${esc([c.名稱,c.品質,c.說明||''].join(' ').toLowerCase())}"><summary><b>${esc(c.名稱)}</b> <span class="chip acc">${esc(c.品質)}</span>${c.限定?'<span class="chip">限定</span>':''}${c.啟動屬性?`<span class="chip">${esc(c.啟動屬性)}</span>`:''}</summary>
+      ${c.說明?`<p class="sub">${esc(c.說明)}</p>`:''}
+      <div class="grid">${kv('啟動屬性',esc(c.啟動屬性||'—'))}${kv('取得方式',esc(c.取得方式||'—'))}${kv('戰鬥技能',esc(c.戰鬥技能?.名稱||'—'))}</div>
+      ${c.坐騎技能?.length?tableFromObjs(c.坐騎技能.map(s=>({技能:s.名稱,說明:s.說明||''}))):''}</details>`;
+  }
+  return h+`</section>`;
+}
+
+const GROWTH={};
+function fillGrowth(el){
+  if(el.dataset.done||!el.open) return;
+  el.dataset.done='1';
+  const d=GROWTH[el.dataset.page];
+  const g=d?.區塊?.[+el.dataset.b]?.分組?.[+el.dataset.g];
+  el.querySelector('.tpl-body').innerHTML=g?tableFromObjs(g.表格):'<div class="empty">沒有資料</div>';
+}
+async function renderGrowth(name){
+  const d=GROWTH[name] ??= await fetchJ(ROOT+'91_養成/'+name+'.json');
+  let h=`<div class="hdr"><h2>${esc(name)}養成</h2></div><p class="sub">${esc(d.說明)}</p>`;
+  d.區塊.forEach((b,bi)=>{
+    h+=`<section><h3>${esc(b.標題)}</h3>${b.說明?`<p class="sub">${esc(b.說明)}</p>`:''}`;
+    if(b.表格?.length) h+=tableFromObjs(b.表格);
+    (b.分組||[]).forEach((g,gi)=>{
+      h+=`<details style="margin-top:8px" data-page="${esc(name)}" data-b="${bi}" data-g="${gi}" ontoggle="fillGrowth(this)"><summary class="sub">${esc(g.標題)}</summary><div class="tpl-body"><div class="empty">展開中…</div></div></details>`;
+    });
+    h+=`</section>`;
+  });
+  return h;
+}
+
 async function renderItems(){
   const d=await codex('道具');
   let h=`<div class="hdr"><h2>道具查詢</h2><span class="chip">${d.數量} 個</span></div><p class="sub">${esc(d.說明)}</p>`;
@@ -360,6 +427,10 @@ async function show(id){
     else if(id==='dress') v.innerHTML=await renderDress();
     else if(id==='pet') v.innerHTML=await renderPets();
     else if(id==='ability') v.innerHTML=await renderAbilities();
+    else if(id==='guardian') v.innerHTML=await renderGuardian();
+    else if(id==='collect') v.innerHTML=await renderCollect();
+    else if(id==='car') v.innerHTML=await renderCar();
+    else if(id.startsWith('g_')) v.innerHTML=await renderGrowth(id.slice(2));
     else if(id==='item') v.innerHTML=await renderItems();
     else if(id==='doc') v.innerHTML=`<div class="hdr"><h2>欄位說明</h2></div>`+md(await fetchT(ROOT+'欄位說明.md'));
     else { const a=await fetchJ(ROOT+id+'/活動.json'); v.innerHTML=renderActivity(a,id); }
@@ -372,7 +443,11 @@ function buildNav(filter=''){
   let h='<div class="nav-group">活動</div>';
   for(const a of INDEX){ if(f&&!(a.名稱+a.資料夾+(a.分類||'')+(a.類型||'')).toLowerCase().includes(f)) continue;
     h+=`<a href="#${encodeURIComponent(a.資料夾)}" data-id="${esc(a.資料夾)}"><span>${esc(a.名稱)}</span><small>${esc(a.分類||'')}</small></a>`;}
-  h+='<div class="nav-group">其他</div>'+SPECIAL.map(s=>`<a href="#${s.id}" data-id="${s.id}"><span>${s.name}</span></a>`).join('');
+  const link=s=>`<a href="#${s.id}" data-id="${s.id}"><span>${s.name}</span></a>`;
+  const keep=s=>!f||s.name.toLowerCase().includes(f);
+  h+='<div class="nav-group">圖鑑</div>'+CODEX_PAGES.filter(keep).map(link).join('');
+  h+='<div class="nav-group">養成</div>'+GROWTH_PAGES.filter(keep).map(link).join('');
+  h+='<div class="nav-group">其他</div>'+[{id:'overview',name:'總覽與規則'},{id:'doc',name:'欄位說明'}].filter(keep).map(link).join('');
   $('#nav').innerHTML=h;
   const cur=decodeURIComponent(location.hash.slice(1));
   document.querySelectorAll('.nav a').forEach(a=>a.classList.toggle('active',a.dataset.id===cur));
