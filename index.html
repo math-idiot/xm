@@ -110,7 +110,7 @@ const fetchJ=async p=>{const r=await fetch(enc(p),{cache:'no-store'});if(!r.ok)t
 const fetchT=async p=>{const r=await fetch(enc(p),{cache:'no-store'});if(!r.ok)throw new Error(p+' '+r.status);return r.text()};
 const ROOT='整理/';
 let INDEX=[];
-const SPECIAL=[{id:'overview',name:'總覽與規則'},{id:'cult',name:'養成參考'},{id:'partner',name:'夥伴圖鑑'},{id:'dress',name:'時裝圖鑑'},{id:'pet',name:'寵物圖鑑'},{id:'item',name:'道具查詢'},{id:'doc',name:'欄位說明'}];
+const SPECIAL=[{id:'overview',name:'總覽與規則'},{id:'cult',name:'養成參考'},{id:'partner',name:'夥伴圖鑑'},{id:'dress',name:'時裝圖鑑'},{id:'pet',name:'寵物圖鑑'},{id:'ability',name:'能力(學習)'},{id:'item',name:'道具查詢'},{id:'doc',name:'欄位說明'}];
 
 const yn=v=>v===null||v===undefined?'<span class="nul">null</span>':v===true?'<span class="ok">有</span>':v===false?'<span class="no">無</span>':esc(v);
 const fmtReq=l=>(l||[]).map(x=>`${esc(x.項目??x.道具)}${x.數量??''}${x.單位??''}`).join('、');
@@ -314,6 +314,29 @@ async function renderPets(){
   return h+`</section>`;
 }
 
+function fillAbility(el){
+  if(el.dataset.done||!el.open) return;
+  el.dataset.done='1';
+  const a=CODEX['能力']?.能力?.find(x=>String(x.id)===el.dataset.aid);
+  el.querySelector('.tpl-body').innerHTML=a?tableFromObjs(a.等級.map(l=>({級:l.級,消耗:l.消耗??'—',研習秒數:l.研習秒數??'—',屬性加成:l.屬性加成??'—',能力值:l.能力值??'—',效果:l.效果??''}))):'<div class="empty">沒有資料</div>';
+}
+async function renderAbilities(){
+  const d=await codex('能力');
+  let h=`<div class="hdr"><h2>能力(學習)</h2><span class="chip">${d.數量} 個</span></div><p class="sub">${esc(d.說明)}</p>`;
+  h+=`<section>${searchBox('搜尋能力 / 分類 / 效果…')} <span class="codex-count sub"></span>`;
+  for(const a of d.能力){
+    const e1=a.等級?.find(l=>l.效果);
+    const k=[a.名稱,a.分類,a.品質,a.說明||'',e1?.效果||''].join(' ').toLowerCase();
+    h+=`<details data-k="${esc(k)}"><summary><b>${esc(a.名稱)}</b> <span class="chip acc">${esc(a.分類)}</span><span class="chip">${esc(a.品質)}</span><span class="chip">${a.等級數} 級</span></summary>
+      ${a.說明?`<p class="sub">${esc(a.說明)}</p>`:''}
+      ${e1?.效果?`<p>${esc(e1.效果)}</p>`:''}
+      <div class="grid">${kv('完美等級',a.完美等級??'—')}${kv('等級數',a.等級數)}${kv('取得方式',esc(a.取得方式||'—'))}</div>
+      <details style="margin-top:10px" data-aid="${a.id}" ontoggle="fillAbility(this)"><summary class="sub">每級消耗與加成(${a.等級數} 級)</summary><div class="tpl-body"><div class="empty">展開中…</div></div></details>
+      </details>`;
+  }
+  return h+`</section>`;
+}
+
 async function renderItems(){
   const d=await codex('道具');
   let h=`<div class="hdr"><h2>道具查詢</h2><span class="chip">${d.數量} 個</span></div><p class="sub">${esc(d.說明)}</p>`;
@@ -336,6 +359,7 @@ async function show(id){
     else if(id==='partner') v.innerHTML=await renderPartners();
     else if(id==='dress') v.innerHTML=await renderDress();
     else if(id==='pet') v.innerHTML=await renderPets();
+    else if(id==='ability') v.innerHTML=await renderAbilities();
     else if(id==='item') v.innerHTML=await renderItems();
     else if(id==='doc') v.innerHTML=`<div class="hdr"><h2>欄位說明</h2></div>`+md(await fetchT(ROOT+'欄位說明.md'));
     else { const a=await fetchJ(ROOT+id+'/活動.json'); v.innerHTML=renderActivity(a,id); }
