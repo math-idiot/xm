@@ -109,8 +109,7 @@ function renderActivity(a,folder){
   let h=`<div class="hdr"><h2>${esc(a.名稱)}</h2>
     ${(a.別名||[]).map(x=>`<span class="chip">別名 ${esc(x)}</span>`).join('')}
     ${a.分類?`<span class="chip acc">${esc(a.分類)}</span>`:''}${a.類型?`<span class="chip">${esc(a.類型)}</span>`:''}
-    ${a.系列?`<span class="chip">系列 ${esc(a.系列)}:${(a.輪替版本||[]).map(esc).join(' / ')}</span>`:''}</div>
-    <div class="sub">${esc(folder)}</div>`;
+    ${a.系列?`<span class="chip">系列 ${esc(a.系列)}:${(a.輪替版本||[]).map(esc).join(' / ')}</span>`:''}</div>`;
   h+=`<div class="grid">${kv('時長',n(a.時長)?'null':esc(a.時長),n(a.時長))}${kv('結算',n(a.結算)?'null':esc(a.結算),n(a.結算))}
     ${kv('需求單位',esc(a.需求單位))}${kv('階段數',a.階段數)}${kv('全拿總需求',n(a.全拿總需求)?'null':a.全拿總需求,n(a.全拿總需求))}
     ${kv('是否補發獎勵',yn(a.是否補發獎勵))}
@@ -159,7 +158,6 @@ function renderActivity(a,folder){
       h+=`<h4 style="margin:10px 0 6px;font-size:14px">${esc(k)}</h4><table><thead><tr><th>名次</th><th>獎勵</th></tr></thead><tbody>${v.map(r=>`<tr><td>${esc(r.名次)}</td><td>${r.獎勵?.length?fmtPrize(r.獎勵):esc(r.獎勵原文)}</td></tr>`).join('')}</tbody></table>`;}
     h+=`</section>`;
   }
-  if(a.資料來源?.length) h+=`<section><h3>原圖</h3><div class="imgs">${a.資料來源.map(p=>`<a href="${enc(p)}" target="_blank" rel="noopener"><img loading="lazy" src="${enc(p)}" alt="${esc(p.split('/').pop())}"><span>${esc(p.split('/').pop())}</span></a>`).join('')}</div></section>`;
   h+=`<div class="bar"><a class="btn" href="${enc(ROOT+folder+'/獎勵.csv')}" download>下載 獎勵.csv</a><a class="btn" href="${enc(ROOT+folder+'/活動.json')}" target="_blank">開啟 活動.json</a></div>`;
   h+=`<details class="raw"><summary>原始 JSON</summary><pre>${esc(JSON.stringify(a,null,2))}</pre></details>`;
   return h;
@@ -179,7 +177,6 @@ async function renderOverview(){
   h+=`<section><h3>事件上限</h3><p class="sub">${esc(o.事件上限.說明)}</p><div class="grid" style="grid-template-columns:1fr 1fr">
     <div><table><thead><tr><th>事件</th><th>次數上限</th></tr></thead><tbody>${Object.entries(o.事件上限.次數上限).map(([k,v])=>`<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join('')}</tbody></table></div>
     <div><table><thead><tr><th>事件</th><th>道具上限</th></tr></thead><tbody>${Object.entries(o.事件上限.道具上限).map(([k,v])=>`<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join('')}</tbody></table></div></div></section>`;
-  h+=`<section><h3>原圖</h3><div class="imgs">${o.資料來源.map(p=>`<a href="${enc(p)}" target="_blank" rel="noopener"><img loading="lazy" src="${enc(p)}" alt=""><span>${esc(p.split('/').pop())}</span></a>`).join('')}</div></section>`;
   return h;
 }
 
@@ -206,7 +203,6 @@ async function renderCult(){
   const xl=xt.心途上限||{}; h+=`<h4 style="margin:10px 0 6px">所有稀有度相同 <span class="chip">上限 ${xl.階??'?'}階${xl.級??'?'}級</span></h4>${xl.備註?`<p class="sub">${esc(xl.備註)}</p>`:''}${xt.規則?`<p class="sub">${esc(xt.規則)}</p>`:''}${(xt.階段&&xt.階段.length)?stageTable(xt.階段,['每級舊年銅鏡','每10級故夢玉鏡']):'<p class="sub">階段資料待補</p>'}<ul class="notes">${(xt.備註||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`;
   h+=`<h4 style="margin:14px 0 6px">心途共鳴</h4><p class="sub">${esc(xt.心途共鳴.說明)}</p>${tableFromObjs((xt.心途共鳴.階段||[]).map(x=>({共鳴等級:x.共鳴等級,需求:x.需求,效果:x.效果原文??x.效果})))}<ul class="notes">${(xt.心途共鳴.備註||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul></section>`;
   h+=`<section><h3>升級</h3>${stageTable(sj.關卡||[])}<ul class="notes">${(sj.備註||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul></section><section><h3>裝備共鳴 <small>${esc(zb.說明||'')}</small></h3>${tableFromObjs((zb.階段||[]).map(x=>({共鳴等級:x.共鳴等級,需求:x.需求??'待確認',攻擊:x.效果?.攻擊,防禦:x.效果?.防禦,氣勢:x.效果?.氣勢})))}<ul class="notes">${(zb.備註||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul></section>`;
-  h+=`<section><h3>原圖</h3><div class="imgs">${[...tp.資料來源,...jx.資料來源].map(p=>`<a href="${enc(p)}" target="_blank" rel="noopener"><img loading="lazy" src="${enc(p)}" alt=""><span>${esc(p.split('/').pop())}</span></a>`).join('')}</div></section>`;
   return h;
 }
 function md(t){ // tiny markdown: headings, tables, lists, code, paragraphs
