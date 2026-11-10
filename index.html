@@ -68,6 +68,11 @@ ul.notes{margin:4px 0;padding-left:20px;color:var(--muted);font-size:13.5px}
 .imgs span{display:block;font-size:11.5px;color:var(--muted);padding:3px 6px;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 details.raw pre{background:var(--muted-bg);padding:12px;border-radius:6px;font:12.5px/1.45 var(--mono);overflow:auto;max-height:60vh}
 details.raw summary{cursor:pointer;color:var(--muted)}
+.codex-q{width:100%;max-width:420px;padding:9px 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--fg);font-size:15px;margin-bottom:10px}
+section>details{border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;background:var(--card)}
+section>details>summary{cursor:pointer;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+section>details[open]>summary{margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.codex-count{margin-left:8px}
 .bar{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 0}
 .btn{padding:6px 12px;border:1px solid var(--border);background:var(--card);color:var(--fg);border-radius:6px;font-size:13px;text-decoration:none;min-height:36px;display:inline-flex;align-items:center}
 .btn:hover{background:var(--muted-bg)}
@@ -105,7 +110,7 @@ const fetchJ=async p=>{const r=await fetch(enc(p),{cache:'no-store'});if(!r.ok)t
 const fetchT=async p=>{const r=await fetch(enc(p),{cache:'no-store'});if(!r.ok)throw new Error(p+' '+r.status);return r.text()};
 const ROOT='整理/';
 let INDEX=[];
-const SPECIAL=[{id:'overview',name:'總覽與規則'},{id:'cult',name:'養成參考'},{id:'doc',name:'欄位說明'}];
+const SPECIAL=[{id:'overview',name:'總覽與規則'},{id:'cult',name:'養成參考'},{id:'partner',name:'夥伴圖鑑'},{id:'dress',name:'時裝圖鑑'},{id:'item',name:'道具查詢'},{id:'doc',name:'欄位說明'}];
 
 const yn=v=>v===null||v===undefined?'<span class="nul">null</span>':v===true?'<span class="ok">有</span>':v===false?'<span class="no">無</span>':esc(v);
 const fmtReq=l=>(l||[]).map(x=>`${esc(x.項目??x.道具)}${x.數量??''}${x.單位??''}`).join('、');
@@ -238,6 +243,62 @@ function md(t){ // tiny markdown: headings, tables, lists, code, paragraphs
   if(inList)out+='</ul>';return `<div class="md">${out}</div>`;
 }
 
+// ---------- 圖鑑(夥伴 / 時裝 / 道具)----------
+function searchBox(ph){
+  return `<input class="codex-q" placeholder="${ph}" oninput="codexFilter(this)">`;
+}
+function codexFilter(el){
+  const q=el.value.trim().toLowerCase();
+  const box=el.closest('section')||el.parentElement;
+  box.querySelectorAll('[data-k]').forEach(r=>{r.style.display=!q||r.dataset.k.includes(q)?'':'none';});
+  const n=[...box.querySelectorAll('[data-k]')].filter(r=>r.style.display!=='none').length;
+  const c=box.querySelector('.codex-count'); if(c) c.textContent=`${n} 筆`;
+}
+const CODEX={};
+async function codex(name){ return CODEX[name] ??= await fetchJ(ROOT+'90_圖鑑/'+name+'.json'); }
+
+async function renderPartners(){
+  const d=await codex('夥伴');
+  let h=`<div class="hdr"><h2>夥伴圖鑑</h2><span class="chip">${d.數量} 位</span></div><p class="sub">${esc(d.說明)}</p>`;
+  h+=`<section>${searchBox('搜尋夥伴 / 稱號 / 職業 / 技能…')} <span class="codex-count sub"></span>`;
+  for(const p of d.夥伴){
+    const k=[p.名稱,p.稱號,p.稀有度,p.職業類型,p.定位,...(p.技能||[]).map(s=>s.名稱)].join(' ').toLowerCase();
+    h+=`<details data-k="${esc(k)}"><summary><b>${esc(p.名稱)}</b> <span class="chip acc">${esc(p.稀有度)}</span>${p.限定?'<span class="chip">限定</span>':''}${p.稱號?`<span class="chip">${esc(p.稱號)}</span>`:''}${p.職業類型?`<span class="chip">${esc(p.職業類型)}</span>`:''}${p.定位?`<span class="chip">${esc(p.定位)}</span>`:''}</summary>
+      <div class="grid">${kv('突破上限',p.突破上限??'—')}${kv('可覺醒',yn(p.可覺醒))}${kv('心途上限',p.心途上限??'無')}
+        ${kv('攻擊',`${p.攻擊.基礎??'—'} (成長 ${p.攻擊.成長??'—'})`)}${kv('防禦',`${p.防禦.基礎??'—'} (成長 ${p.防禦.成長??'—'})`)}${kv('氣勢',`${p.氣勢.基礎??'—'} (成長 ${p.氣勢.成長??'—'})`)}
+        ${kv('星座',esc(p.星座||'—'))}${kv('生日',esc(p.生日||'—'))}${kv('血型',esc(p.血型||'—'))}${kv('年齡',esc(p.年齡||'—'))}</div>
+      ${p.技能?.length?`<h4 style="margin:12px 0 6px">技能</h4>${tableFromObjs(p.技能.map(s=>({名稱:s.名稱,類型:s.類型,解鎖:s.解鎖階?`突破${s.解鎖階}階`:'初始',說明:s.說明})))}`:''}
+      ${p.介紹?`<h4 style="margin:12px 0 6px">介紹</h4><p class="sub" style="white-space:pre-wrap">${esc(p.介紹)}</p>`:''}</details>`;
+  }
+  return h+`</section>`;
+}
+
+async function renderDress(){
+  const d=await codex('時裝');
+  let h=`<div class="hdr"><h2>時裝圖鑑</h2><span class="chip">${d.套裝數} 套</span><span class="chip">${d.單品數} 件</span></div><p class="sub">${esc(d.說明)}</p>`;
+  h+=`<section>${searchBox('搜尋套裝 / 單品名…')} <span class="codex-count sub"></span>`;
+  for(const s of d.套裝){
+    const k=[s.套裝名,s.品質,...(s.單品||[]).map(p=>p.名稱)].join(' ').toLowerCase();
+    h+=`<details data-k="${esc(k)}"><summary><b>${esc(s.套裝名)}</b> <span class="chip acc">${esc(s.品質)}</span><span class="chip">${s.件數} 件</span></summary>
+      ${s.介紹?`<p class="sub">${esc(s.介紹)}</p>`:''}
+      ${tableFromObjs((s.單品||[]).map(p=>({部位:p.部位,名稱:p.名稱,品質:p.品質,說明:p.說明||''})))}</details>`;
+  }
+  if(d.未歸套的單品?.length) h+=`<h4 style="margin:14px 0 6px">未歸套的單品</h4>${tableFromObjs(d.未歸套的單品.map(p=>({名稱:p.名稱,部位:p.部位,品質:p.品質})))}`;
+  return h+`</section>`;
+}
+
+async function renderItems(){
+  const d=await codex('道具');
+  let h=`<div class="hdr"><h2>道具查詢</h2><span class="chip">${d.數量} 個</span></div><p class="sub">${esc(d.說明)}</p>`;
+  h+=`<section>${searchBox('搜尋道具名稱 / 說明…')} <span class="codex-count sub"></span>
+    <table><thead><tr><th>名稱</th><th>分類</th><th>品質</th><th>說明</th></tr></thead><tbody>`;
+  for(const it of d.道具){
+    const k=[it.名稱,it.分類,it.品質,it.說明||''].join(' ').toLowerCase();
+    h+=`<tr data-k="${esc(k)}"><td>${esc(it.名稱)}</td><td>${esc(it.分類)}</td><td>${esc(it.品質)}</td><td class="sub">${esc((it.說明||'').replace(/\n/g,' '))}</td></tr>`;
+  }
+  return h+`</tbody></table></section>`;
+}
+
 async function show(id){
   const v=$('#view'); v.innerHTML='<div class="empty">載入中…</div>';
   document.querySelectorAll('.nav a').forEach(a=>a.classList.toggle('active',a.dataset.id===id));
@@ -245,6 +306,9 @@ async function show(id){
   try{
     if(id==='overview') v.innerHTML=await renderOverview();
     else if(id==='cult') v.innerHTML=await renderCult();
+    else if(id==='partner') v.innerHTML=await renderPartners();
+    else if(id==='dress') v.innerHTML=await renderDress();
+    else if(id==='item') v.innerHTML=await renderItems();
     else if(id==='doc') v.innerHTML=`<div class="hdr"><h2>欄位說明</h2></div>`+md(await fetchT(ROOT+'欄位說明.md'));
     else { const a=await fetchJ(ROOT+id+'/活動.json'); v.innerHTML=renderActivity(a,id); }
     document.title=(INDEX.find(x=>x.資料夾===id)?.名稱||SPECIAL.find(s=>s.id===id)?.name||id)+' · 巡夢少女 活動表格';
