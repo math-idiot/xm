@@ -129,6 +129,7 @@ function renderActivity(a,folder){
     if(ep.備註) h+=`<div class="sub" style="margin-top:6px">${esc(ep.備註)}</div>`;
     h+=`</section>`; }
   if(a.獎勵種類?.length) h+=`<div>獎勵種類:${a.獎勵種類.map(x=>`<span class="tag">${esc(x)}</span>`).join('')}</div>`;
+  if(a.全部領完總獎勵?.length) h+=`<div style="margin-top:6px">全部領完共可拿:${a.全部領完總獎勵.map(x=>`<span class="tag">${esc(x.道具)}${x.數量??''}${esc(x.單位??'')}</span>`).join('')}</div>`;
   if(a.備註?.length) h+=`<section><h3>備註</h3><ul class="notes">${a.備註.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></section>`;
   // 階段
   const st=a.階段||[];
