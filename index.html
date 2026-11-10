@@ -224,7 +224,7 @@ async function renderCult(){
   h+=`<h4 style="margin:10px 0 6px">${Object.entries(xr).map(([k,v])=>`<span class="chip">${k} ${v??'無心途'}</span>`).join(' ')}</h4>${xl.備註?`<p class="sub">${esc(xl.備註)}</p>`:''}${xt.規則?`<p class="sub">${esc(xt.規則)}</p>`:''}${(xt.階段&&xt.階段.length)?stageTable(xt.階段,['每級舊年銅鏡','每10級故夢玉鏡','每10級明心寶鏡']):'<p class="sub">階段資料待補</p>'}`;
   if(xt.UR差異?.length) h+=`<h4 style="margin:14px 0 6px">UR 差異 <small>這幾階 UR 比 SSR 貴</small></h4>${tableFromObjs(xt.UR差異.map(d=>({階:d.等級,SSR:Object.entries(d.SSR).map(([k,v])=>k+v).join('、'),UR:Object.entries(d.UR).map(([k,v])=>k+v).join('、')})))}`;
   h+=`<ul class="notes">${(xt.備註||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`;
-  h+=`<h4 style="margin:14px 0 6px">心途共鳴</h4><p class="sub">${esc(xt.心途共鳴.說明)}</p>${tableFromObjs((xt.心途共鳴.階段||[]).map(x=>({共鳴等級:x.共鳴等級,需求:x.需求,效果:x.效果原文??x.效果})))}<ul class="notes">${(xt.心途共鳴.備註||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul></section>`;
+  h+=`<h4 style="margin:14px 0 6px">心途共鳴</h4><p class="sub">${esc(xt.心途共鳴.說明)}</p>${tableFromObjs((xt.心途共鳴.階段||[]).map(x=>({共鳴等級:x.共鳴等級,需求:x.需求,達成後總效果:x.達成後總效果??x.效果原文,'遊戲內預覽':x.遊戲內預覽??''})))}<ul class="notes">${(xt.心途共鳴.備註||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul></section>`;
   h+=`<section><h3>升級</h3>${stageTable(sj.關卡||[])}<ul class="notes">${(sj.備註||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul></section><section><h3>裝備共鳴 <small>${esc(zb.說明||'')}</small></h3>${tableFromObjs((zb.階段||[]).map(x=>({共鳴等級:x.共鳴等級,需求:x.需求??'待確認',攻擊:x.效果?.攻擊,防禦:x.效果?.防禦,氣勢:x.效果?.氣勢})))}<ul class="notes">${(zb.備註||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul></section>`;
   return h;
 }
@@ -260,7 +260,7 @@ function fillTpl(el){
   if(el.dataset.done||!el.open) return;
   el.dataset.done='1';
   const t=CODEX['時裝']?.升星範本?.[el.dataset.tpl];
-  el.querySelector('.tpl-body').innerHTML=t?tableFromObjs(t.節點.map(n=>({階段:n.階段,消耗:n.消耗||'—',屬性加成:n.屬性加成||'—',時尚值加成:n.時尚值加成||'—',星級效果:n.星級效果||''}))):'<div class="empty">沒有資料</div>';
+  el.querySelector('.tpl-body').innerHTML=t?tableFromObjs(t.節點.map(n=>({階段:n.階段,消耗:n.消耗||'—',屬性加成:n.屬性加成||'—',感知力加成:n.感知力加成||'—',星級效果:n.星級效果||''}))):'<div class="empty">沒有資料</div>';
 }
 async function codex(name){ return CODEX[name] ??= await fetchJ(ROOT+'90_圖鑑/'+name+'.json'); }
 
