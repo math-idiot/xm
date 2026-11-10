@@ -110,7 +110,7 @@ const fetchJ=async p=>{const r=await fetch(enc(p),{cache:'no-store'});if(!r.ok)t
 const fetchT=async p=>{const r=await fetch(enc(p),{cache:'no-store'});if(!r.ok)throw new Error(p+' '+r.status);return r.text()};
 const ROOT='整理/';
 let INDEX=[];
-const SPECIAL=[{id:'overview',name:'總覽與規則'},{id:'cult',name:'養成參考'},{id:'partner',name:'夥伴圖鑑'},{id:'dress',name:'時裝圖鑑'},{id:'item',name:'道具查詢'},{id:'doc',name:'欄位說明'}];
+const SPECIAL=[{id:'overview',name:'總覽與規則'},{id:'cult',name:'養成參考'},{id:'partner',name:'夥伴圖鑑'},{id:'dress',name:'時裝圖鑑'},{id:'pet',name:'寵物圖鑑'},{id:'item',name:'道具查詢'},{id:'doc',name:'欄位說明'}];
 
 const yn=v=>v===null||v===undefined?'<span class="nul">null</span>':v===true?'<span class="ok">有</span>':v===false?'<span class="no">無</span>':esc(v);
 const fmtReq=l=>(l||[]).map(x=>`${esc(x.項目??x.道具)}${x.數量??''}${x.單位??''}`).join('、');
@@ -299,6 +299,21 @@ async function renderDress(){
   return h+`</section>`;
 }
 
+async function renderPets(){
+  const d=await codex('寵物');
+  let h=`<div class="hdr"><h2>寵物圖鑑</h2><span class="chip">${d.種類數} 種</span><span class="chip">${d.筆數} 筆</span></div><p class="sub">${esc(d.說明)}</p>`;
+  h+=`<section>${searchBox('搜尋寵物 / 定位 / 技能…')} <span class="codex-count sub"></span>`;
+  for(const p of d.寵物){
+    const k=[p.名稱,p.定位,...(p.品質||[]).flatMap(q=>(q.技能||[]).map(s=>s.名稱||''))].join(' ').toLowerCase();
+    h+=`<details data-k="${esc(k)}"><summary><b>${esc(p.名稱)}</b> <span class="chip acc">${esc(p.定位||'')}</span>${p.變異?'<span class="chip">變異</span>':''}<span class="chip">${p.品質.map(q=>q.稀有度).join(' / ')}</span></summary>
+      ${p.說明?`<p class="sub">${esc(p.說明)}</p>`:''}
+      ${tableFromObjs(p.品質.map(q=>({稀有度:q.稀有度,資質:q.資質||'—',資質條數:q.資質條數??'—',
+        技能:(q.技能||[]).map(s=>s.名稱||s.id).join('、'),
+        '技能說明(1級)':(q.技能||[]).map(s=>s.說明||'').join(' / ')})))}</details>`;
+  }
+  return h+`</section>`;
+}
+
 async function renderItems(){
   const d=await codex('道具');
   let h=`<div class="hdr"><h2>道具查詢</h2><span class="chip">${d.數量} 個</span></div><p class="sub">${esc(d.說明)}</p>`;
@@ -320,6 +335,7 @@ async function show(id){
     else if(id==='cult') v.innerHTML=await renderCult();
     else if(id==='partner') v.innerHTML=await renderPartners();
     else if(id==='dress') v.innerHTML=await renderDress();
+    else if(id==='pet') v.innerHTML=await renderPets();
     else if(id==='item') v.innerHTML=await renderItems();
     else if(id==='doc') v.innerHTML=`<div class="hdr"><h2>欄位說明</h2></div>`+md(await fetchT(ROOT+'欄位說明.md'));
     else { const a=await fetchJ(ROOT+id+'/活動.json'); v.innerHTML=renderActivity(a,id); }
