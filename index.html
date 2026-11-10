@@ -127,7 +127,10 @@ function renderActivity(a,folder){
     h+=`<section><h3>事件積分 <small>類型:${type===null||type===undefined?'<span class="nul">null(待確認)</span>':esc(type)}</small></h3>`;
     h+=list.length?list.map(e=>`<span class="tag">${esc(e.事件)} +${e.積分}</span>`).join(''):`<span class="nul">${type==='隨機'?'隨機事件,無固定倍數':type==='依階段'?'依各階段計分途徑,見下方「階段」':'原圖未列事件積分'}</span>`;
     if(ep.備註) h+=`<div class="sub" style="margin-top:6px">${esc(ep.備註)}</div>`;
+    if(a.輪替版本事件積分) h+=`<div class="sub" style="margin-top:6px">輪替版本各自的事件積分:</div>${tableFromObjs(Object.entries(a.輪替版本事件積分).map(([k,v])=>({版本:k,事件積分:v.map(x=>`${x.事件}+${x.積分}`).join('、')})))}`;
     h+=`</section>`; }
+  if(a.上榜門檻) h+=`<div class="grid">${Object.entries(a.上榜門檻).map(([k,v])=>kv('上榜門檻 '+k,v)).join('')}</div>`;
+  if(a.設定表階段?.length) h+=`<section><h3>各階段積分來源 <small>遊戲設定表</small></h3>${tableFromObjs(a.設定表階段.flatMap(s=>s.途徑.map((t,i)=>({階段:i?'':`${s.階段} ${s.名稱??''}`,獲取途徑:t.遊戲內原文,每次積分:t.每次積分,積分上限:t.積分獲取上限??'無上限'}))))}</section>`;
   if(a.獎勵種類?.length) h+=`<div>獎勵種類:${a.獎勵種類.map(x=>`<span class="tag">${esc(x)}</span>`).join('')}</div>`;
   if(a.全部領完總獎勵?.length) h+=`<div style="margin-top:6px">全部領完共可拿:${a.全部領完總獎勵.map(x=>`<span class="tag">${esc(x.道具)}${x.數量??''}${esc(x.單位??'')}</span>`).join('')}</div>`;
   if(a.備註?.length) h+=`<section><h3>備註</h3><ul class="notes">${a.備註.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></section>`;
