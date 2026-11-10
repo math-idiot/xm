@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>活動表格瀏覽</title>
+<style>
+:root{
+  --bg:#fff;--fg:#171717;--muted:#475569;--muted-bg:#f3f4f6;--border:#e5e5e5;--card:#fff;
+  --accent:#a16207;--accent-bg:#fdf6e3;--side:#fafafa;--ring:#171717;--ok:#15803d;--no:#b91c1c;
+  --sans:system-ui,-apple-system,"Segoe UI","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --bg:#111;--fg:#ededed;--muted:#a3a3a3;--muted-bg:#1f1f1f;--border:#2e2e2e;--card:#171717;
+  --accent:#e2b74a;--accent-bg:#2a2210;--side:#161616;--ring:#ededed;--ok:#4ade80;--no:#f87171;}}
+:root[data-theme="dark"]{
+  --bg:#111;--fg:#ededed;--muted:#a3a3a3;--muted-bg:#1f1f1f;--border:#2e2e2e;--card:#171717;
+  --accent:#e2b74a;--accent-bg:#2a2210;--side:#161616;--ring:#ededed;--ok:#4ade80;--no:#f87171;}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 var(--sans)}
+a{color:var(--accent)}
+button{font:inherit;cursor:pointer}
+.app{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+aside{background:var(--side);border-right:1px solid var(--border);padding:16px 12px;position:sticky;top:0;height:100vh;overflow:auto}
+aside h1{font-size:16px;margin:0 0 12px;letter-spacing:.02em}
+aside input{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--fg);margin-bottom:12px}
+aside input:focus{outline:2px solid var(--ring);outline-offset:1px}
+.nav-group{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin:14px 6px 6px}
+.nav a{display:flex;justify-content:space-between;gap:8px;padding:8px 10px;border-radius:6px;color:var(--fg);text-decoration:none;min-height:40px;align-items:center}
+.nav a:hover{background:var(--muted-bg)}
+.nav a.active{background:var(--fg);color:var(--bg)}
+.nav a small{color:var(--muted);font-size:12px}
+.nav a.active small{color:var(--bg);opacity:.75}
+main{padding:24px 32px 64px;max-width:1300px;min-width:0}
+.hdr{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px 16px;margin-bottom:6px}
+.hdr h2{font-size:26px;margin:0}
+.chip{display:inline-block;padding:2px 10px;border:1px solid var(--border);border-radius:999px;font-size:12.5px;color:var(--muted);background:var(--muted-bg)}
+.chip.acc{border-color:var(--accent);color:var(--accent);background:var(--accent-bg)}
+.sub{color:var(--muted);font-size:13px;margin-bottom:18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin:14px 0 20px}
+.kv{border:1px solid var(--border);border-radius:8px;padding:10px 12px;background:var(--card)}
+.kv b{display:block;font-size:11.5px;color:var(--muted);font-weight:500;margin-bottom:2px}
+.kv span{font-size:16px;font-weight:600}
+.kv .null{color:var(--muted);font-weight:400;font-style:italic}
+section{margin:26px 0}
+section>h3{font-size:15px;margin:0 0 8px;padding-bottom:6px;border-bottom:2px solid var(--fg);display:flex;justify-content:space-between;align-items:baseline}
+section>h3 small{font-weight:400;color:var(--muted);font-size:12.5px}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{border-bottom:1px solid var(--border);padding:6px 10px;text-align:left;vertical-align:top}
+th{font-size:12px;color:var(--muted);font-weight:600;background:var(--muted-bg);position:sticky;top:0}
+td.num,th.num{text-align:right}
+tr:hover td{background:var(--muted-bg)}
+tr.total td{font-weight:700;border-top:2px solid var(--fg)}
+.tag{display:inline-block;padding:1px 7px;border-radius:4px;font-size:12px;background:var(--accent-bg);color:var(--accent);margin:1px 4px 1px 0;white-space:nowrap}
+ul.notes{margin:4px 0;padding-left:20px;color:var(--muted);font-size:13.5px}
+.imgs{display:flex;flex-wrap:wrap;gap:10px}
+.imgs a{display:block;border:1px solid var(--border);border-radius:6px;overflow:hidden;background:var(--card)}
+.imgs img{display:block;height:140px;width:auto;max-width:260px;object-fit:cover}
+.imgs span{display:block;font-size:11.5px;color:var(--muted);padding:3px 6px;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+details.raw pre{background:var(--muted-bg);padding:12px;border-radius:6px;font:12.5px/1.45 var(--mono);overflow:auto;max-height:60vh}
+details.raw summary{cursor:pointer;color:var(--muted)}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 0}
+.btn{padding:6px 12px;border:1px solid var(--border);background:var(--card);color:var(--fg);border-radius:6px;font-size:13px;text-decoration:none;min-height:36px;display:inline-flex;align-items:center}
+.btn:hover{background:var(--muted-bg)}
+.btn:focus-visible,.nav a:focus-visible{outline:2px solid var(--ring);outline-offset:2px}
+.ok{color:var(--ok);font-weight:600}.no{color:var(--no);font-weight:600}.nul{color:var(--muted);font-style:italic}
+.md h1,.md h2{font-size:20px;margin:18px 0 8px}.md h2{font-size:17px}.md code{font:13px var(--mono);background:var(--muted-bg);padding:1px 4px;border-radius:3px}
+.md table{margin:8px 0 16px}
+.empty{color:var(--muted);padding:24px;text-align:center;border:1px dashed var(--border);border-radius:8px}
+.menu-btn{display:none}
+body.print .app{grid-template-columns:1fr}body.print #side,body.print .menu-btn{display:none}body.print #main{max-width:1100px;margin:0 auto;padding:24px 32px}
+@media (max-width:800px){
+  .app{grid-template-columns:1fr}
+  aside{position:fixed;left:0;top:0;width:min(85vw,300px);z-index:10;transform:translateX(-100%);transition:transform .2s}
+  aside.open{transform:none;box-shadow:0 0 0 100vmax rgba(0,0,0,.4)}
+  main{padding:16px}
+  .menu-btn{display:inline-flex;margin-bottom:12px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside id="side">
+  <h1>活動表格瀏覽</h1>
+  <input id="q" type="search" placeholder="搜尋活動…" aria-label="搜尋活動">
+  <nav class="nav" id="nav"></nav>
+</aside>
+<main id="main"><button class="btn menu-btn" id="menu">☰ 選單</button><div id="view"><div class="empty">載入中…</div></div></main>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+const enc=p=>p.split('/').map(encodeURIComponent).join('/');
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fetchJ=async p=>{const r=await fetch(enc(p),{cache:'no-store'});if(!r.ok)throw new Error(p+' '+r.status);return r.json()};
+const fetchT=async p=>{const r=await fetch(enc(p),{cache:'no-store'});if(!r.ok)throw new Error(p+' '+r.status);return r.text()};
+const ROOT='整理/';
+let INDEX=[];
+const SPECIAL=[{id:'overview',name:'總覽與規則'},{id:'cult',name:'養成參考'},{id:'doc',name:'欄位說明'}];
+
+const yn=v=>v===null||v===undefined?'<span class="nul">null</span>':v===true?'<span class="ok">有</span>':v===false?'<span class="no">無</span>':esc(v);
+const fmtReq=l=>(l||[]).map(x=>`${esc(x.項目??x.道具)}${x.數量??''}${x.單位??''}`).join('、');
+const fmtPrize=l=>(l||[]).map(x=>`<span class="tag">${esc(x.道具)}${x.數量??''}${x.單位??''}${x.備註?'('+esc(x.備註)+')':''}</span>`).join('');
+const kv=(k,v,isNull)=>`<div class="kv"><b>${k}</b><span class="${isNull?'null':''}">${v}</span></div>`;
+
+function renderActivity(a,folder){
+  const n=v=>v===null||v===undefined||v===''||(Array.isArray(v)&&!v.length);
+  let h=`<div class="hdr"><h2>${esc(a.名稱)}</h2>
+    ${(a.別名||[]).map(x=>`<span class="chip">別名 ${esc(x)}</span>`).join('')}
+    ${a.分類?`<span class="chip acc">${esc(a.分類)}</span>`:''}${a.類型?`<span class="chip">${esc(a.類型)}</span>`:''}
+    ${a.系列?`<span class="chip">系列 ${esc(a.系列)}:${(a.輪替版本||[]).map(esc).join(' / ')}</span>`:''}</div>
+    <div class="sub">${esc(folder)}</div>`;
+  h+=`<div class="grid">${kv('時長',n(a.時長)?'null':esc(a.時長),n(a.時長))}${kv('結算',n(a.結算)?'null':esc(a.結算),n(a.結算))}
+    ${kv('需求單位',esc(a.需求單位))}${kv('階段數',a.階段數)}${kv('全拿總需求',n(a.全拿總需求)?'null':a.全拿總需求,n(a.全拿總需求))}
+    ${kv('是否補發獎勵',yn(a.是否補發獎勵))}
+    ${kv('個人排行榜',`有:${yn(a.排行榜?.個人排行榜?.有)} 獎勵:${yn(a.排行榜?.個人排行榜?.獎勵)}`)}
+    ${kv('家族排行榜',`有:${yn(a.排行榜?.家族排行榜?.有)} 獎勵:${yn(a.排行榜?.家族排行榜?.獎勵)}`)}</div>`;
+  { const ep=a.事件積分||{}; const list=Array.isArray(ep)?ep:(ep.事件||[]); const type=Array.isArray(ep)?null:ep.類型;
+    h+=`<section><h3>事件積分 <small>類型:${type===null||type===undefined?'<span class="nul">null(待確認)</span>':esc(type)}</small></h3>`;
+    h+=list.length?list.map(e=>`<span class="tag">${esc(e.事件)} +${e.積分}</span>`).join(''):`<span class="nul">${type==='隨機'?'隨機事件,無固定倍數':type==='依階段'?'依各階段計分途徑,見下方「階段」':'原圖未列事件積分'}</span>`;
+    if(ep.備註) h+=`<div class="sub" style="margin-top:6px">${esc(ep.備註)}</div>`;
+    h+=`</section>`; }
+  if(a.獎勵種類?.length) h+=`<div>獎勵種類:${a.獎勵種類.map(x=>`<span class="tag">${esc(x)}</span>`).join('')}</div>`;
+  if(a.備註?.length) h+=`<section><h3>備註</h3><ul class="notes">${a.備註.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></section>`;
+  // 階段
+  const st=a.階段||[];
+  if(st.length){
+    const isRank=st.some(s=>s.獎勵原文&&typeof s.獎勵原文==='object');
+    const isDay=st.some(s=>s.項目);
+    h+=`<section><h3>階段 <small>${st.length} 階</small></h3>`;
+    if(isDay){
+      h+=`<table><thead><tr><th>星期</th><th>獲取途徑</th><th class="num">積分</th><th class="num">上限</th><th>上限所需數量</th><th>建議賽前多囤</th><th>遊戲內原文</th><th class="num">每次積分</th><th class="num">單日積分上限</th></tr></thead><tbody>`;
+      for(const s of st){
+        const items=s.項目||[],game=s.遊戲內說明||[],rows=Math.max(items.length,game.length);
+        for(let i=0;i<rows;i++){const it=items[i]||{},g=game[i]||{};
+          h+=`<tr>${i===0?`<td rowspan="${rows}"><b>${esc(s.名稱)}</b></td>`:''}<td>${esc(it.獲取途徑)}</td><td class="num">${esc(it.積分)}</td><td class="num">${esc(it.上限)}</td><td>${esc(it.上限所需數量)}</td><td>${it.建議賽前多囤?'<span class="ok">是</span>':''}</td><td>${esc(g.遊戲內原文)}</td><td class="num">${g.每次積分??''}</td><td class="num">${g.積分獲取上限===null?'無限':g.積分獲取上限??''}</td></tr>`;}
+      }
+      h+=`</tbody></table>`;
+    }else if(isRank){
+      h+=`<table><thead><tr><th>場次</th><th class="num">領取分</th><th>名次</th><th>獎勵</th><th>輪數獎勵</th></tr></thead><tbody>`;
+      for(const s of st){const ks=Object.keys(s.獎勵原文);ks.forEach((k,i)=>{h+=`<tr>${i===0?`<td rowspan="${ks.length}"><b>${esc(s.名稱)}</b></td><td class="num" rowspan="${ks.length}">${fmtReq(s.需求).replace(/\D+/,'')}</td>`:''}<td>${k}</td><td>${fmtPrize(s.獎勵.filter(x=>String(x.名次)===k))}</td>${i===0?`<td rowspan="${ks.length}">${s.輪數獎勵?esc(s.輪數獎勵):'<span class="nul">—</span>'}</td>`:''}</tr>`;});}
+      h+=`</tbody></table>`;
+    }else{
+      const hasAcc=st.some(s=>s.累積!==null&&s.累積!==undefined);
+      h+=`<table><thead><tr><th>#</th><th>名稱</th><th>需求</th>${hasAcc?'<th class="num">累積</th>':''}<th>獎勵</th></tr></thead><tbody>`;
+      for(const s of st) h+=`<tr><td>${s.階段}</td><td>${esc(s.名稱)}</td><td>${fmtReq(s.需求)}</td>${hasAcc?`<td class="num">${s.累積??''}</td>`:''}<td>${fmtPrize(s.獎勵)}</td></tr>`;
+      h+=`</tbody></table>`;
+    }
+    h+=`</section>`;
+  }
+  if(a.額外獎勵?.length){
+    h+=`<section><h3>額外獎勵</h3><table><thead><tr><th>項目</th><th>條件</th><th>獎勵</th></tr></thead><tbody>${a.額外獎勵.map(e=>`<tr><td>${esc(e.項目)}</td><td>${esc(e.需求||'')}</td><td>${e.獎勵?.length?fmtPrize(e.獎勵):esc(e.內容)}</td></tr>`).join('')}</tbody></table></section>`;
+  }
+  for(const who of ['個人','家族']){
+    const rp=a[who+'排行獎勵']; if(!rp) continue;
+    h+=`<section><h3>${who}排行獎勵</h3>${rp.說明?`<p class="sub">${esc(rp.說明)}</p>`:''}`;
+    for(const [k,v] of Object.entries(rp)){ if(!Array.isArray(v)) continue;
+      h+=`<h4 style="margin:10px 0 6px;font-size:14px">${esc(k)}</h4><table><thead><tr><th>名次</th><th>獎勵</th></tr></thead><tbody>${v.map(r=>`<tr><td>${esc(r.名次)}</td><td>${r.獎勵?.length?fmtPrize(r.獎勵):esc(r.獎勵原文)}</td></tr>`).join('')}</tbody></table>`;}
+    h+=`</section>`;
+  }
+  if(a.資料來源?.length) h+=`<section><h3>原圖</h3><div class="imgs">${a.資料來源.map(p=>`<a href="${enc(p)}" target="_blank" rel="noopener"><img loading="lazy" src="${enc(p)}" alt="${esc(p.split('/').pop())}"><span>${esc(p.split('/').pop())}</span></a>`).join('')}</div></section>`;
+  h+=`<div class="bar"><a class="btn" href="${enc(ROOT+folder+'/獎勵.csv')}" download>下載 獎勵.csv</a><a class="btn" href="${enc(ROOT+folder+'/活動.json')}" target="_blank">開啟 活動.json</a></div>`;
+  h+=`<details class="raw"><summary>原始 JSON</summary><pre>${esc(JSON.stringify(a,null,2))}</pre></details>`;
+  return h;
+}
+
+function tableFromObjs(rows){
+  if(!rows?.length) return '<div class="empty">無資料</div>';
+  const cols=[...new Set(rows.flatMap(r=>Object.keys(r)))];
+  return `<table><thead><tr>${cols.map(c=>`<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${cols.map(c=>`<td>${typeof r[c]==='object'&&r[c]!==null?esc(JSON.stringify(r[c])):esc(r[c])}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+}
+
+async function renderOverview(){
+  const o=await fetchJ(ROOT+'00_總覽與規則/總覽.json');
+  let h=`<div class="hdr"><h2>總覽與規則</h2></div>`;
+  h+=`<section><h3>每日活動總覽</h3>${tableFromObjs(o.每日活動總覽)}</section>`;
+  h+=`<section><h3>每週輪替</h3>${tableFromObjs(o.每週輪替)}</section>`;
+  h+=`<section><h3>事件上限</h3><p class="sub">${esc(o.事件上限.說明)}</p><div class="grid" style="grid-template-columns:1fr 1fr">
+    <div><table><thead><tr><th>事件</th><th>次數上限</th></tr></thead><tbody>${Object.entries(o.事件上限.次數上限).map(([k,v])=>`<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join('')}</tbody></table></div>
+    <div><table><thead><tr><th>事件</th><th>道具上限</th></tr></thead><tbody>${Object.entries(o.事件上限.道具上限).map(([k,v])=>`<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join('')}</tbody></table></div></div></section>`;
+  h+=`<section><h3>原圖</h3><div class="imgs">${o.資料來源.map(p=>`<a href="${enc(p)}" target="_blank" rel="noopener"><img loading="lazy" src="${enc(p)}" alt=""><span>${esc(p.split('/').pop())}</span></a>`).join('')}</div></section>`;
+  return h;
+}
+
+function stageTable(stages,extraCols=[]){
+  if(!stages?.length) return '<div class="empty">待補</div>';
+  const mats=[];stages.forEach(s=>s.素材.forEach(m=>{const k=m.名稱+(m.碎片種類?'('+m.碎片種類+')':'');if(!mats.includes(k))mats.push(k)}));
+  let h=`<table><thead><tr><th>等級</th>${mats.map(m=>`<th class="num">${esc(m)}</th><th class="num">${esc(m)}累計</th>`).join('')}${extraCols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>`;
+  const run={};  // 該階沒有這種素材時顯示 0,累計延續前一階
+  for(const s of stages){h+=`<tr><td>${s.等級??((s.階??'')+'-'+(s.級??''))}</td>`;for(const m of mats){const x=s.素材.find(y=>y.名稱+(y.碎片種類?'('+y.碎片種類+')':'')===m);const q=x?x.數量:0;run[m]=x&&x.累計!=null?x.累計:((run[m]??0)+(q??0));h+=`<td class="num">${q??''}</td><td class="num">${run[m]}</td>`;}h+=extraCols.map(c=>`<td>${esc(s[c]??'')}</td>`).join('')+'</tr>';}
+  return h+'</tbody></table>';
+}
+async function renderCult(){
+  const base=ROOT+'99_養成參考/';
+  const [tp,jx,xt,sj,zb]=await Promise.all(['突破','覺醒','心途','升級','裝備共鳴'].map(n=>fetchJ(base+n+'.json')));
+  let h=`<div class="hdr"><h2>養成參考</h2><span class="chip">非活動</span></div><p class="sub">突破 / 覺醒 / 心途 / 升級 / 裝備共鳴;每階素材後面是從 1 階累加到該階的已用量</p>`;
+  h+=`<section><h3>突破 <small>${esc(tp.說明)}</small></h3>`;
+  for(const [r,b] of Object.entries(tp.稀有度)){
+    h+=`<h4 style="margin:14px 0 6px">${r} <span class="chip">突破上限 ${yn(b.突破上限)}</span> <span class="chip">覺醒 ${yn(b.覺醒)}</span> <span class="chip">心途 ${yn(b.心途)}</span> <span class="chip">升級被動 ${yn(b.升級被動)}</span></h4>`;
+    h+=stageTable(b.階段,['技能']);
+    if(b.備註?.length) h+=`<ul class="notes">${b.備註.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`;
+  }
+  h+=`</section><section><h3>覺醒 <small>適用稀有度:${yn(jx.適用稀有度)} · 上限 ${jx.覺醒上限}</small></h3>${stageTable(jx.階段)}${jx.每階效果?`<h4 style="margin:14px 0 6px">每階效果 <small>${esc(jx.每階效果.說明||'')}</small></h4>${tableFromObjs(['一般夥伴','限定夥伴','UR'].map(k=>({夥伴類型:k,...(jx.每階效果[k]||{攻擊:'待確認'})})))}`:''}<ul class="notes">${(jx.備註||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul></section>`;
+  h+=`<section><h3>心途</h3><p class="sub">${esc(xt.說明)}</p>`;
+  const xl=xt.心途上限||{}; h+=`<h4 style="margin:10px 0 6px">所有稀有度相同 <span class="chip">上限 ${xl.階??'?'}階${xl.級??'?'}級</span></h4>${xl.備註?`<p class="sub">${esc(xl.備註)}</p>`:''}${xt.規則?`<p class="sub">${esc(xt.規則)}</p>`:''}${(xt.階段&&xt.階段.length)?stageTable(xt.階段,['每級舊年銅鏡','每10級故夢玉鏡']):'<p class="sub">階段資料待補</p>'}<ul class="notes">${(xt.備註||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`;
+  h+=`<h4 style="margin:14px 0 6px">心途共鳴</h4><p class="sub">${esc(xt.心途共鳴.說明)}</p>${tableFromObjs((xt.心途共鳴.階段||[]).map(x=>({共鳴等級:x.共鳴等級,需求:x.需求,效果:x.效果原文??x.效果})))}<ul class="notes">${(xt.心途共鳴.備註||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul></section>`;
+  h+=`<section><h3>升級</h3>${stageTable(sj.關卡||[])}<ul class="notes">${(sj.備註||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul></section><section><h3>裝備共鳴 <small>${esc(zb.說明||'')}</small></h3>${tableFromObjs((zb.階段||[]).map(x=>({共鳴等級:x.共鳴等級,需求:x.需求??'待確認',攻擊:x.效果?.攻擊,防禦:x.效果?.防禦,氣勢:x.效果?.氣勢})))}<ul class="notes">${(zb.備註||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul></section>`;
+  h+=`<section><h3>原圖</h3><div class="imgs">${[...tp.資料來源,...jx.資料來源].map(p=>`<a href="${enc(p)}" target="_blank" rel="noopener"><img loading="lazy" src="${enc(p)}" alt=""><span>${esc(p.split('/').pop())}</span></a>`).join('')}</div></section>`;
+  return h;
+}
+function md(t){ // tiny markdown: headings, tables, lists, code, paragraphs
+  const lines=t.split('\n');let out='',i=0,inList=false;
+  const inline=s=>esc(s).replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>');
+  while(i<lines.length){const l=lines[i];
+    if(/^\|/.test(l)){const rows=[];while(i<lines.length&&/^\|/.test(lines[i])){rows.push(lines[i]);i++;}
+      const cells=r=>r.replace(/^\||\|$/g,'').split('|').map(c=>inline(c.trim()));
+      out+=`<table><thead><tr>${cells(rows[0]).map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${rows.slice(2).map(r=>`<tr>${cells(r).map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`;continue;}
+    if(inList&&!/^- /.test(l)){out+='</ul>';inList=false;}
+    if(/^# /.test(l))out+=`<h1>${inline(l.slice(2))}</h1>`;else if(/^## /.test(l))out+=`<h2>${inline(l.slice(3))}</h2>`;
+    else if(/^- /.test(l)){if(!inList){out+='<ul class="notes">';inList=true;}out+=`<li>${inline(l.slice(2))}</li>`;}
+    else if(l.trim())out+=`<p>${inline(l)}</p>`;
+    i++;}
+  if(inList)out+='</ul>';return `<div class="md">${out}</div>`;
+}
+
+async function show(id){
+  const v=$('#view'); v.innerHTML='<div class="empty">載入中…</div>';
+  document.querySelectorAll('.nav a').forEach(a=>a.classList.toggle('active',a.dataset.id===id));
+  $('#side').classList.remove('open');
+  try{
+    if(id==='overview') v.innerHTML=await renderOverview();
+    else if(id==='cult') v.innerHTML=await renderCult();
+    else if(id==='doc') v.innerHTML=`<div class="hdr"><h2>欄位說明</h2></div>`+md(await fetchT(ROOT+'欄位說明.md'));
+    else { const a=await fetchJ(ROOT+id+'/活動.json'); v.innerHTML=renderActivity(a,id); }
+    document.title=(INDEX.find(x=>x.資料夾===id)?.名稱||SPECIAL.find(s=>s.id===id)?.name||id)+' · 活動表格';
+  }catch(e){v.innerHTML=`<div class="empty">載入失敗:${esc(e.message)}</div>`;}
+  window.scrollTo(0,0);
+}
+function buildNav(filter=''){
+  const f=filter.trim().toLowerCase();
+  let h='<div class="nav-group">活動</div>';
+  for(const a of INDEX){ if(f&&!(a.名稱+a.資料夾+(a.分類||'')+(a.類型||'')).toLowerCase().includes(f)) continue;
+    h+=`<a href="#${encodeURIComponent(a.資料夾)}" data-id="${esc(a.資料夾)}"><span>${esc(a.名稱)}</span><small>${esc(a.分類||'')}</small></a>`;}
+  h+='<div class="nav-group">其他</div>'+SPECIAL.map(s=>`<a href="#${s.id}" data-id="${s.id}"><span>${s.name}</span></a>`).join('');
+  $('#nav').innerHTML=h;
+  const cur=decodeURIComponent(location.hash.slice(1));
+  document.querySelectorAll('.nav a').forEach(a=>a.classList.toggle('active',a.dataset.id===cur));
+}
+(async()=>{
+  try{INDEX=await fetchJ(ROOT+'目錄.json');}catch(e){$('#view').innerHTML=`<div class="empty">讀不到 整理/目錄.json:${esc(e.message)}</div>`;return;}
+  buildNav();
+  $('#q').addEventListener('input',e=>buildNav(e.target.value));
+  $('#menu').addEventListener('click',()=>$('#side').classList.toggle('open'));
+  const go=()=>show(decodeURIComponent(location.hash.slice(1))||INDEX[0].資料夾);
+  if(location.search.includes('print')) document.body.classList.add('print');
+  window.addEventListener('hashchange',go); go();
+})();
+</script>
+</body>
+</html>
