@@ -136,6 +136,7 @@ function renderActivity(a,folder){
     const isRank=st.some(s=>s.獎勵原文&&typeof s.獎勵原文==='object');
     const isDay=st.some(s=>s.項目);
     h+=`<section><h3>階段 <small>${st.length} 階</small></h3>`;
+    if(a.獎勵順序隨機) h+=`<p class="sub">獎勵順序隨機:下表的獎勵與階段不綁定,但不會重複領到,全部開完即可拿齊。</p>`;
     if(isDay){
       h+=`<table><thead><tr><th>星期</th><th>獲取途徑</th><th class="num">積分</th><th class="num">上限</th><th>上限所需數量</th><th>建議賽前多囤</th><th>遊戲內原文</th><th class="num">每次積分</th><th class="num">單日積分上限</th></tr></thead><tbody>`;
       for(const s of st){
@@ -185,6 +186,7 @@ async function renderOverview(){
   h+=`<section><h3>事件上限</h3><p class="sub">${esc(o.事件上限.說明)}</p><div class="grid" style="grid-template-columns:1fr 1fr">
     <div><table><thead><tr><th>事件</th><th>次數上限</th></tr></thead><tbody>${Object.entries(o.事件上限.次數上限).map(([k,v])=>`<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join('')}</tbody></table></div>
     <div><table><thead><tr><th>事件</th><th>道具上限</th></tr></thead><tbody>${Object.entries(o.事件上限.道具上限).map(([k,v])=>`<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join('')}</tbody></table></div></div></section>`;
+  if(o.備註?.length) h+=`<section><h3>校對說明</h3><ul class="notes">${o.備註.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></section>`;
   return h;
 }
 
