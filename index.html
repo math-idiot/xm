@@ -348,11 +348,11 @@ async function renderGuardian(){
   h+=`<section>${searchBox('搜尋珍寶 / 定位 / 技能 / 綁定夥伴…')} <span class="codex-count sub"></span>`;
   for(const g of d.珍寶){
     const bind=(g.綁定夥伴||[]).join('、')||'通用';
-    const k=[g.名稱,g.品質,g.定位,bind,g.技能?.名稱||''].join(' ').toLowerCase();
+    const k=[g.名稱,g.品質,g.定位,bind,...(g.技能||[]).map(t=>t.名稱)].join(' ').toLowerCase();
     h+=`<details data-k="${esc(k)}"><summary><b>${esc(g.名稱)}</b> <span class="chip acc">${esc(g.品質)}</span>${g.定位?`<span class="chip">${esc(g.定位)}</span>`:''}<span class="chip">${esc(bind)}</span>${g.專屬?'<span class="chip">專屬</span>':''}${g.基礎戰力?`<span class="chip">戰力 ${g.基礎戰力}</span>`:''}</summary>
       ${g.說明?`<p class="sub">${esc(g.說明)}</p>`:''}
       <div class="grid">${kv('階',g.階??'—')}${kv('啟動屬性',esc(g.啟動屬性||'—'))}${kv('分解可得',esc(g.分解可得||'—'))}${kv('合成需求數',g.合成需求數??'—')}</div>
-      ${g.技能?`<h4 style="margin:12px 0 6px">技能 — ${esc(g.技能.名稱)}</h4>${tableFromObjs((g.技能.等級||[]).map(l=>({級:l.級,說明:l.說明})))}`:'<p class="sub">技能詞條待補</p>'}</details>`;
+      ${g.技能?.length?g.技能.map(t=>`<h4 style="margin:12px 0 6px">技能 — ${esc(t.名稱)}</h4>${tableFromObjs((t.等級||[]).map(l=>({級:l.級,說明:l.說明})))}`).join(''):'<p class="sub">技能詞條待補</p>'}</details>`;
   }
   return h+`</section>`;
 }
