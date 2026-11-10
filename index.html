@@ -111,10 +111,10 @@ const fetchT=async p=>{const r=await fetch(enc(p),{cache:'no-store'});if(!r.ok)t
 const ROOT='整理/';
 let INDEX=[];
 const CODEX_PAGES=[{id:'partner',name:'夥伴圖鑑'},{id:'pet',name:'寵物圖鑑'},{id:'dress',name:'時裝圖鑑'},
-  {id:'guardian',name:'珍寶圖鑑'},{id:'collect',name:'珍藏圖鑑'},{id:'car',name:'坐騎圖鑑'},
+  {id:'guardian',name:'珍寶圖鑑'},{id:'collect',name:'珍藏圖鑑'},{id:'car',name:'坐騎圖鑑'},{id:'equip',name:'裝備圖鑑'},
   {id:'ability',name:'能力(學習)'},{id:'item',name:'道具查詢'}];
 const GROWTH_PAGES=[{id:'cult',name:'夥伴養成'},{id:'g_寵物',name:'寵物養成'},{id:'g_時裝',name:'時裝養成'},
-  {id:'g_珍寶',name:'珍寶養成'},{id:'g_珍藏',name:'珍藏養成'},{id:'g_坐騎',name:'坐騎養成'}];
+  {id:'g_珍寶',name:'珍寶養成'},{id:'g_珍藏',name:'珍藏養成'},{id:'g_坐騎',name:'坐騎養成'},{id:'g_裝備',name:'裝備養成'}];
 const SPECIAL=[{id:'overview',name:'總覽與規則'},...CODEX_PAGES,...GROWTH_PAGES,{id:'doc',name:'欄位說明'}];
 
 const yn=v=>v===null||v===undefined?'<span class="nul">null</span>':v===true?'<span class="ok">有</span>':v===false?'<span class="no">無</span>':esc(v);
@@ -385,6 +385,21 @@ async function renderCar(){
   return h+`</section>`;
 }
 
+async function renderEquip(){
+  const d=await codex('裝備');
+  let h=`<div class="hdr"><h2>裝備圖鑑</h2><span class="chip">${d.數量} 件</span></div><p class="sub">${esc(d.說明)}</p>`;
+  h+=`<section>${searchBox('搜尋裝備 / 部位 / 品質…')} <span class="codex-count sub"></span>`;
+  for(const e of d.裝備){
+    const k=[e.名稱,e.部位,e.品質,e.說明||''].join(' ').toLowerCase();
+    h+=`<details data-k="${esc(k)}"><summary><b>${esc(e.名稱)}</b> <span class="chip acc">${esc(e.品質)}</span><span class="chip">${esc(e.部位)}</span>${e.進階為?`<span class="chip">進階為 ${esc(e.進階為)}</span>`:''}</summary>
+      ${e.說明?`<p class="sub">${esc(e.說明)}</p>`:''}
+      ${tableFromObjs((e.星級||[]).map(s=>({星:s.星,屬性:s.屬性||'—',寶石孔:s.寶石孔,強化上限:s.強化上限||'—',分解返還:s.分解返還||'—'})))}</details>`;
+  }
+  h+=`</section><section><h3>套裝加成</h3>${tableFromObjs(d.套裝加成||[])}</section>`;
+  h+=`<section><h3>隨機詞條</h3><p class="sub">裝備會帶隨機詞條,稀有度越高越難出</p>${tableFromObjs((d.隨機詞條||[]).map(r=>({屬性:r.屬性,稀有度:r.稀有度,數值範圍:r.數值範圍})))}</section>`;
+  return h;
+}
+
 const GROWTH={};
 function fillGrowth(el){
   if(el.dataset.done||!el.open) return;
@@ -433,6 +448,7 @@ async function show(id){
     else if(id==='guardian') v.innerHTML=await renderGuardian();
     else if(id==='collect') v.innerHTML=await renderCollect();
     else if(id==='car') v.innerHTML=await renderCar();
+    else if(id==='equip') v.innerHTML=await renderEquip();
     else if(id.startsWith('g_')) v.innerHTML=await renderGrowth(id.slice(2));
     else if(id==='item') v.innerHTML=await renderItems();
     else if(id==='doc') v.innerHTML=`<div class="hdr"><h2>欄位說明</h2></div>`+md(await fetchT(ROOT+'欄位說明.md'));
