@@ -103,6 +103,12 @@ ol.kvlist>li{margin:4px 0}
 /* 卡片只有 150px 寬,來源標籤常常比卡片長。標籤本身是 nowrap(不想讓玩法名被折斷),
    所以在卡片裡改成可以折行,免得整條被切掉看不到後半 */
 .deco .ds .tag{white-space:normal;word-break:break-all}
+.deco .series{margin-top:6px;padding-top:6px;border-top:1px solid var(--border);font-size:12px}
+.deco .series b{font-weight:500;color:var(--sub);margin-right:4px}
+.deco .series small{color:var(--sub);margin-left:4px}
+.deco .series a{display:inline-block;margin:3px 4px 0 0;padding:1px 6px;border-radius:4px;
+                background:var(--muted-bg);color:var(--fg);text-decoration:none;font-size:11px}
+.deco .series a:hover{background:var(--accent-bg);color:var(--accent)}
 .deco .ds b{font-weight:500;color:var(--fg)}
 .icards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:10px;margin:12px 0 20px}
 .icard{display:flex;gap:10px;border:1px solid var(--border);border-radius:8px;padding:10px;background:var(--card)}
@@ -202,7 +208,8 @@ var CODEX_DIR=[];                       // [{分類,說明,頁面:[{id,名稱,�
 const CODEX_PAGES=[{id:'partner',name:'夥伴'},{id:'pet',name:'寵物'},{id:'guardian',name:'珍寶'},
   {id:'dress',name:'時裝'},{id:'car',name:'坐騎'},{id:'collect',name:'珍藏'},{id:'sticker',name:'貼紙集換'},
   {id:'itemdex',name:'道具'},{id:'equip',name:'裝備'},{id:'ability',name:'能力(學習)'},
-  {id:'res',name:'資源'},{id:'deco',name:'飾框'},{id:'face',name:'貼圖'}];
+  {id:'res',name:'資源'},{id:'deco',name:'飾框'},{id:'face',name:'貼圖'},
+  {id:'emo',name:'表情符號'}];
 const GROWTH_PAGES=[{id:'cult',name:'夥伴'},{id:'g_寵物',name:'寵物'},{id:'g_時裝',name:'時裝'},
   {id:'g_珍寶',name:'珍寶'},{id:'g_珍藏',name:'珍藏'},{id:'g_坐騎',name:'坐騎'},{id:'g_裝備',name:'裝備'}];
 // 側欄的圖鑑順序直接照「養成」那七類推出來,兩邊才不會各自漂走;
@@ -352,7 +359,10 @@ function searchBox(ph){
 }
 function codexFilter(el){
   const q=el.value.trim().toLowerCase();
-  const box=el.closest('section')||el.parentElement;
+  // 搜尋框通常跟卡片在同一個 section,但飾框/貼圖那幾頁是一個種類一個 section、
+  // 搜尋框自己一個。那種情況要往外找到整頁,不然搜了沒反應。
+  let box=el.closest('section')||el.parentElement;
+  if(!box.querySelector('[data-k]')) box=document.getElementById('view')||box;
   box.querySelectorAll('[data-k]').forEach(r=>{r.style.display=!q||r.dataset.k.includes(q)?'':'none';});
   const n=[...box.querySelectorAll('[data-k]')].filter(r=>r.style.display!=='none').length;
   const c=box.querySelector('.codex-count'); if(c) c.textContent=`${n} 筆`;
@@ -440,7 +450,7 @@ async function renderAbilities(){
     h+=`<details data-k="${esc(k)}"><summary>${thumb(d.圖片,a.圖,a.品質,a.名稱)}<b>${esc(a.名稱)}</b> <span class="chip acc">${esc(a.分類)}</span><span class="chip">${a.等級數} 級</span></summary>
       ${a.說明?`<p class="sub">${esc(a.說明)}</p>`:''}
       ${e1?.效果?`<p>${esc(e1.效果)}</p>`:''}
-      <div class="grid">${kv('完美等級',a.完美等級??'—')}${kv('等級數',a.等級數)}${kv('取得方式',esc(a.取得方式||'—'))}</div>
+      <div class="grid">${kv('完美等級',a.完美等級??'—')}${kv('等級數',a.等級數)}${kv('獲取',(a.獲取說明||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('')||'—')}</div>
       <details style="margin-top:10px" data-aid="${a.id}" ontoggle="fillAbility(this)"><summary class="sub">每級消耗與加成(${a.等級數} 級)</summary><div class="tpl-body"><div class="empty">展開中…</div></div></details>
       </details>`;
   }
@@ -486,7 +496,7 @@ async function renderCar(){
     h+=`<details data-k="${esc([c.名稱,c.品質,c.說明||'',c.取得方式||'',gwText(c.獲取)].join(' ').toLowerCase())}"><summary>${thumb(d.圖片,c.圖,c.品質,c.名稱)}<b>${esc(c.名稱)}</b>${c.限定?'<span class="chip">限定</span>':''}${c.啟動屬性?`<span class="chip">${esc(c.啟動屬性)}</span>`:''}</summary>
       ${c.立繪?`<img class="stand full" src="${enc('圖片/'+(d.立繪圖片||{}).資料夾+'/'+c.立繪)}?v=${(d.立繪圖片||{}).版本||''}" alt="${esc(c.名稱)}" loading="lazy">`:''}
       ${c.說明?`<p class="sub">${esc(c.說明)}</p>`:''}
-      <div class="grid">${kv('啟動屬性',esc(c.啟動屬性||'—'))}${kv('取得方式',esc(c.取得方式||'—'))}${kv('戰鬥技能',esc(c.戰鬥技能?.名稱||'—'))}${c.獲取?kv('可前往',gw(c.獲取)):''}</div>
+      <div class="grid">${kv('啟動屬性',esc(c.啟動屬性||'—'))}${kv('獲取',(c.獲取說明||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('')||'—')}${kv('戰鬥技能',esc(c.戰鬥技能?.名稱||'—'))}${c.獲取?kv('可前往',gw(c.獲取)):''}</div>
       ${c.坐騎技能?.length?tableFromObjs(c.坐騎技能.map(s=>({技能:s.名稱,說明:s.說明||''}))):''}</details>`;
   }
   return h+`</section>`;
@@ -567,7 +577,7 @@ function decoSrc(x){
   const named=(x.反查來源||[]).filter(t=>!/待查/.test(t));
   const vague=(x.反查來源||[]).filter(t=>/待查/.test(t));
   // 條件(幾級開放)屬於那個玩法自己的頁面,不寫在這張卡上
-  let all=[...(x.獲取說明?[x.獲取說明]:[]),...(x.獲取||[]).map(g=>g.名稱),...named];
+  let all=[...(x.獲取說明||[]),...(x.獲取||[]).map(g=>g.名稱),...named];
   if(!all.length) all=vague;
   // 已經查到是哪一個去處(「京城歷練」「畫冊商店」)就不要再掛籠統的那個
   if(all.some(t=>/.歷練$/.test(t))) all=all.filter(t=>t!=='進行歷練'&&t!=='歷練地點');
@@ -575,6 +585,20 @@ function decoSrc(x){
   const best=new Map();
   for(const t of all){const k=srcKey(t);if(!best.has(k)||t.length>best.get(k).length)best.set(k,t);}
   return [...best.values()].map(t=>`<span class="tag">${esc(t)}</span>`).join('');
+}
+// 同一個主題常常同時出頭像/頭像框/聊天氣泡/宮牌/稱號(「一念枯榮」有五件)。
+// 點系列裡的任何一件就把整頁篩成那一組 —— 這幾件分散在不同種類的區塊,不然找不到彼此。
+function decoSeries(x){
+  const s=x.系列; if(!s) return '';
+  const others=(s.成員||[]).filter(m=>!(m.種類===x.種類&&m.名稱===x.名稱));
+  if(!others.length) return '';
+  return `<div class="series"><b>系列</b> ${esc(s.名稱)}<small>${s.件數} 件</small>
+    ${others.map(m=>`<a href="#" onclick="return decoPick(this,'${esc(s.名稱)}')">${esc(m.種類)}</a>`).join('')}</div>`;
+}
+function decoPick(el,name){
+  const q=document.querySelector('.codex-q');
+  if(q){ q.value=name; codexFilter(q); q.scrollIntoView({block:'center'}); }
+  return false;
 }
 function decoCard(x,wide){
   const ks=x.圖示||[];
@@ -587,7 +611,8 @@ function decoCard(x,wide){
   return `<div class="deco${wide?' wide':''}" data-k="${esc([x.名稱,x.種類,x.品質,x.子分頁||'',x.說明||''].join(' ').toLowerCase())}">
     <div class="pic">${pic}</div>
     <div class="nm">${esc(x.名稱)}</div>
-    <div class="ds">${x.子分頁?`<b>${esc(x.子分頁)}</b><br>`:''}${esc(x.說明||'')}${decoSrc(x)}</div></div>`;
+    <div class="ds">${x.子分頁?`<b>${esc(x.子分頁)}</b><br>`:''}${esc(x.說明||'')}${decoSrc(x)}
+      ${decoSeries(x)}</div></div>`;
 }
 const DECO_ORDER=['頭像','頭像框','聊天氣泡','宮牌','天幕','稱號'];
 const DECO_WIDE=new Set(['聊天氣泡','宮牌','天幕','稱號']);
@@ -607,23 +632,18 @@ async function renderDeco(){
   return h;
 }
 
-// 這一類在遊戲裡是同一個「表情」分頁,但實際上是兩種東西:
-// 小圓臉的表情符號(預設那包)和角色大圖的貼圖(其他三包)。分開列才看得清楚。
-async function renderFace(){
-  const d=await codex('貼圖');
-  const group=(list,key)=>{const m=new Map();for(const x of list){const k=key(x)||'其他';if(!m.has(k))m.set(k,[]);m.get(k).push(x)}return m};
-  const byKind=group(d.貼圖,x=>x.種類);
-  let h=`<div class="hdr"><h2>貼圖</h2><span class="chip">${d.數量} 個</span><span class="chip acc">${(d.圖片||{}).有圖} 個有圖</span></div><p class="sub">${esc(d.說明)}</p>`;
-  h+=`<section>${searchBox('搜尋貼圖名稱 / 說明…')} <span class="codex-count sub"></span></section>`;
-  for(const kind of ['表情符號','貼圖',...[...byKind.keys()].filter(k=>k!=='表情符號'&&k!=='貼圖')]){
-    const list=byKind.get(kind); if(!list) continue;
-    const wide=kind!=='表情符號';
-    h+=`<section><h3>${esc(kind)} <small>${list.length} 個 · ${list.filter(x=>x.圖示).length} 個有圖</small></h3>`;
-    for(const [tab,sub] of group(list,x=>x.子分頁))
-      h+=`<h4 class="sub" style="margin:10px 0 0">${esc(tab)} <small>${sub.length}</small></h4>
-        <div class="decos${wide?' wide':''}">${sub.map(x=>decoCard(x,wide)).join('')}</div>`;
-    h+=`</section>`;
-  }
+// 設定表的「表情」分頁裝了兩種東西,素材樹已經分成兩類,這支兩邊共用:
+//   表情符號 = 96px 的小圓臉(一欄小格)   貼圖 = 400px 的角色大圖(一欄大格)
+async function renderFace(cat){
+  const d=await codex(cat), list=d[cat]||[];
+  const wide=cat!=='表情符號';
+  const byTab=new Map();
+  for(const x of list){const k=x.子分頁||'其他';if(!byTab.has(k))byTab.set(k,[]);byTab.get(k).push(x)}
+  let h=`<div class="hdr"><h2>${esc(cat)}</h2><span class="chip">${d.數量} 個</span><span class="chip acc">${(d.圖片||{}).有圖} 個有圖</span></div><p class="sub">${esc(d.說明)}</p>`;
+  h+=`<section>${searchBox('搜尋名稱 / 說明…')} <span class="codex-count sub"></span></section>`;
+  for(const [tab,sub] of byTab)
+    h+=`<section><h3>${esc(tab)} <small>${sub.length} 個 · ${sub.filter(x=>x.圖示).length} 個有圖</small></h3>
+      <div class="decos${wide?' wide':''}">${sub.map(x=>decoCard(x,wide)).join('')}</div></section>`;
   return h;
 }
 
@@ -650,7 +670,7 @@ const RAWSRC={
   珍寶:'90_圖鑑/珍寶.json', 珍藏:'90_圖鑑/珍藏.json', 坐騎:'90_圖鑑/坐騎.json',
   裝備:'90_圖鑑/裝備.json', 能力:'90_圖鑑/能力.json', 資源:'90_圖鑑/資源.json',
   道具:'90_圖鑑/道具.json', 貼紙集換:'90_圖鑑/貼紙集換.json',
-  飾框:'90_圖鑑/飾框.json', 貼圖:'90_圖鑑/貼圖.json',
+  飾框:'90_圖鑑/飾框.json', 貼圖:'90_圖鑑/貼圖.json', 表情符號:'90_圖鑑/表情符號.json',
   招募:'95_其他/招募.json', 玩法:'95_其他/玩法.json',
   規則:'95_其他/規則.json',
 };
@@ -899,7 +919,8 @@ async function show(id){
     else if(id==='equip') v.innerHTML=await renderEquip();
     else if(id==='sticker') v.innerHTML=await renderSticker();
     else if(id==='deco') v.innerHTML=await renderDeco();
-    else if(id==='face') v.innerHTML=await renderFace();
+    else if(id==='face') v.innerHTML=await renderFace('貼圖');
+    else if(id==='emo') v.innerHTML=await renderFace('表情符號');
     else if(id.startsWith('st_')) v.innerHTML=await renderStickerTheme(decodeURIComponent(id.slice(3)));
     else if(id.startsWith('sa_')) v.innerHTML=await renderStickerAlbum(id.slice(3));
     else if(id.startsWith('g_')) v.innerHTML=await renderGrowth(id.slice(2));
