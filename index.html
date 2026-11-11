@@ -35,6 +35,15 @@ aside h1{font-size:16px;margin:0 0 12px;letter-spacing:.02em}
 aside input{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--fg);margin-bottom:12px}
 aside input:focus{outline:2px solid var(--ring);outline-offset:1px}
 .nav-group{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin:14px 6px 6px}
+.nav-sec{margin:10px 0}
+.nav-sec>summary{list-style:none;cursor:pointer;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;
+  padding:6px;border-radius:6px;display:flex;justify-content:space-between;align-items:center;min-height:32px}
+.nav-sec>summary::-webkit-details-marker{display:none}
+.nav-sec>summary:hover{background:var(--muted-bg)}
+.nav-sec>summary::before{content:"▾";margin-right:6px;font-size:10px;transition:transform .15s;display:inline-block}
+.nav-sec:not([open])>summary::before{transform:rotate(-90deg)}
+.nav-sec>summary small{color:var(--muted);font-size:11px;letter-spacing:0}
+.nav-sub{font-size:11px;color:var(--muted);margin:8px 8px 2px;opacity:.8}
 .nav a{display:flex;justify-content:space-between;gap:8px;padding:8px 10px;border-radius:6px;color:var(--fg);text-decoration:none;min-height:40px;align-items:center}
 .nav a:hover{background:var(--muted-bg)}
 .nav a.active{background:var(--fg);color:var(--bg)}
@@ -126,13 +135,16 @@ const fetchJ=async p=>{const r=await fetch(enc(p),{cache:'no-store'});if(!r.ok)t
 const fetchT=async p=>{const r=await fetch(enc(p),{cache:'no-store'});if(!r.ok)throw new Error(p+' '+r.status);return r.text()};
 const ROOT='整理/';
 let INDEX=[];
-const CODEX_PAGES=[{id:'partner',name:'夥伴圖鑑'},{id:'pet',name:'寵物圖鑑'},{id:'dress',name:'時裝圖鑑'},
-  {id:'guardian',name:'珍寶圖鑑'},{id:'collect',name:'珍藏圖鑑'},{id:'car',name:'坐騎圖鑑'},{id:'equip',name:'裝備圖鑑'},
-  {id:'ability',name:'能力(學習)'},{id:'sticker',name:'貼紙集換'},
-  {id:'itemdex',name:'道具圖鑑'},{id:'item',name:'道具查詢'}];
-const GROWTH_PAGES=[{id:'cult',name:'夥伴養成'},{id:'g_寵物',name:'寵物養成'},{id:'g_時裝',name:'時裝養成'},
-  {id:'g_珍寶',name:'珍寶養成'},{id:'g_珍藏',name:'珍藏養成'},{id:'g_坐騎',name:'坐騎養成'},{id:'g_裝備',name:'裝備養成'}];
-const SPECIAL=[{id:'overview',name:'總覽與規則'},...CODEX_PAGES,...GROWTH_PAGES,{id:'doc',name:'欄位說明'}];
+// 圖鑑拆成三組,側欄才不會一長串
+const CODEX_GROUPS=[
+  {g:'角色',    pages:[{id:'partner',name:'夥伴'},{id:'pet',name:'寵物'},{id:'guardian',name:'珍寶'}]},
+  {g:'外觀收藏',pages:[{id:'dress',name:'時裝'},{id:'car',name:'坐騎'},{id:'collect',name:'珍藏'},{id:'sticker',name:'貼紙集換'}]},
+  {g:'物品',    pages:[{id:'itemdex',name:'道具'},{id:'equip',name:'裝備'},{id:'ability',name:'能力(學習)'}]},
+];
+const CODEX_PAGES=CODEX_GROUPS.flatMap(x=>x.pages);
+const GROWTH_PAGES=[{id:'cult',name:'夥伴'},{id:'g_寵物',name:'寵物'},{id:'g_時裝',name:'時裝'},
+  {id:'g_珍寶',name:'珍寶'},{id:'g_珍藏',name:'珍藏'},{id:'g_坐騎',name:'坐騎'},{id:'g_裝備',name:'裝備'}];
+const SPECIAL=[{id:'overview',name:'總覽與規則'},...CODEX_PAGES,...GROWTH_PAGES,{id:'item',name:'道具查詢'},{id:'doc',name:'欄位說明'}];
 
 const yn=v=>v===null||v===undefined?'<span class="nul">null</span>':v===true?'<span class="ok">有</span>':v===false?'<span class="no">無</span>':esc(v);
 const fmtReq=l=>(l||[]).map(x=>`${esc(x.項目??x.道具)}${x.數量??''}${x.單位??''}`).join('、');
@@ -464,7 +476,8 @@ async function renderItemCodex(){
   const d=await codex('道具');
   let h=`<div class="hdr"><h2>道具圖鑑</h2><span class="chip">${d.數量} 個</span><span class="chip acc">${d.有圖} 個有圖</span></div>
     <p class="sub">${esc(d.說明)}</p>`;
-  h+=`<section>${searchBox('搜尋道具名稱 / 說明 / 品質 / 分頁…')} <span class="codex-count sub"></span>`;
+  h+=`<section>${searchBox('搜尋道具名稱 / 說明 / 品質 / 分頁…')} <span class="codex-count sub"></span>
+    <span style="float:right"><button class="btn" onclick="setItemMode('table')">改看表格</button></span>`;
   const tabs=d.分頁||[];
   for(const tab of tabs){
     const list=d.道具.filter(x=>x.背包分頁===tab);
@@ -488,14 +501,16 @@ async function renderItemCodex(){
   return h+`</section>`;
 }
 
+function setItemMode(m){ try{localStorage.setItem('itemMode',m)}catch(e){}; show(m==='table'?'item':'itemdex'); }
 async function renderItems(){
   const d=await codex('道具');
   let h=`<div class="hdr"><h2>道具查詢</h2><span class="chip">${d.數量} 個</span></div><p class="sub">${esc(d.說明)}</p>`;
   h+=`<section>${searchBox('搜尋道具名稱 / 說明…')} <span class="codex-count sub"></span>
-    <table><thead><tr><th>名稱</th><th>分類</th><th>品質</th><th>說明</th></tr></thead><tbody>`;
+    <span style="float:right"><button class="btn" onclick="setItemMode('card')">改看圖卡</button></span>
+    <table><thead><tr><th>名稱</th><th>分頁</th><th>分類</th><th>品質</th><th>說明</th></tr></thead><tbody>`;
   for(const it of d.道具){
     const k=[it.名稱,it.分類,it.品質,it.說明||''].join(' ').toLowerCase();
-    h+=`<tr data-k="${esc(k)}"><td>${esc(it.名稱)}</td><td>${esc(it.分類)}</td><td>${esc(it.品質)}</td><td class="sub">${rich((it.說明||'').replace(/\n/g,' '))}</td></tr>`;
+    h+=`<tr data-k="${esc(k)}"><td>${esc(it.名稱)}</td><td>${esc(it.背包分頁)}</td><td>${esc(it.分類)}</td><td>${esc(it.品質)}</td><td class="sub">${rich((it.說明||'').replace(/\n/g,' '))}</td></tr>`;
   }
   return h+`</tbody></table></section>`;
 }
@@ -525,16 +540,21 @@ async function show(id){
   }catch(e){v.innerHTML=`<div class="empty">載入失敗:${esc(e.message)}</div>`;}
   window.scrollTo(0,0);
 }
+const NAVOPEN=k=>{try{return localStorage.getItem('nav:'+k)!=='0'}catch(e){return true}};
+function navToggle(el,k){try{localStorage.setItem('nav:'+k,el.open?'1':'0')}catch(e){}}
 function buildNav(filter=''){
   const f=filter.trim().toLowerCase();
-  let h='<div class="nav-group">活動</div>';
-  for(const a of INDEX){ if(f&&!(a.名稱+a.資料夾+(a.分類||'')+(a.類型||'')).toLowerCase().includes(f)) continue;
-    h+=`<a href="#${encodeURIComponent(a.資料夾)}" data-id="${esc(a.資料夾)}"><span>${esc(a.名稱)}</span><small>${esc(a.分類||'')}</small></a>`;}
   const link=s=>`<a href="#${s.id}" data-id="${s.id}"><span>${s.name}</span></a>`;
   const keep=s=>!f||s.name.toLowerCase().includes(f);
-  h+='<div class="nav-group">圖鑑</div>'+CODEX_PAGES.filter(keep).map(link).join('');
-  h+='<div class="nav-group">養成</div>'+GROWTH_PAGES.filter(keep).map(link).join('');
-  h+='<div class="nav-group">其他</div>'+[{id:'overview',name:'總覽與規則'},{id:'doc',name:'欄位說明'}].filter(keep).map(link).join('');
+  // 有在搜尋時全部展開,不然找不到東西
+  const sec=(k,title,body,n)=>!body?'':`<details class="nav-sec" ${f||NAVOPEN(k)?'open':''} ontoggle="navToggle(this,'${k}')">
+    <summary>${title}${n!=null?`<small>${n}</small>`:''}</summary>${body}</details>`;
+  const acts=INDEX.filter(a=>!f||(a.名稱+a.資料夾+(a.分類||'')+(a.類型||'')).toLowerCase().includes(f));
+  let h=sec('act','活動',acts.map(a=>`<a href="#${encodeURIComponent(a.資料夾)}" data-id="${esc(a.資料夾)}"><span>${esc(a.名稱)}</span><small>${esc(a.分類||'')}</small></a>`).join(''),acts.length);
+  const codex=CODEX_GROUPS.map(g=>{const l=g.pages.filter(keep); return l.length?`<div class="nav-sub">${g.g}</div>`+l.map(link).join(''):'';}).join('');
+  h+=sec('codex','圖鑑',codex);
+  h+=sec('growth','養成',GROWTH_PAGES.filter(keep).map(link).join(''));
+  h+=sec('other','其他',[{id:'overview',name:'總覽與規則'},{id:'item',name:'道具查詢(純表格)'},{id:'doc',name:'欄位說明'}].filter(keep).map(link).join(''));
   $('#nav').innerHTML=h;
   const cur=decodeURIComponent(location.hash.slice(1));
   document.querySelectorAll('.nav a').forEach(a=>a.classList.toggle('active',a.dataset.id===cur));
