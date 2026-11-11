@@ -64,6 +64,12 @@ main{padding:24px 32px 64px;max-width:1300px;min-width:0}
 details>summary{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 details>summary>b{margin-right:2px}
 .stand.full{max-height:420px}
+table.kv{border-collapse:collapse;width:100%;margin:2px 0}
+table.kv>tbody>tr>th{text-align:left;vertical-align:top;white-space:nowrap;padding:2px 10px 2px 0;
+  color:var(--muted);font-weight:500;font-size:13px;border-bottom:1px solid var(--border)}
+table.kv>tbody>tr>td{padding:2px 0;border-bottom:1px solid var(--border);font-size:13px}
+ol.kvlist{margin:2px 0;padding-left:20px}
+ol.kvlist>li{margin:4px 0}
 .suitpic{height:56px;width:auto;border-radius:6px;vertical-align:middle;margin-right:8px}
 .stand{float:right;max-height:260px;margin:0 0 8px 14px;border-radius:8px}
 @media(max-width:600px){.stand{float:none;display:block;margin:0 auto 10px;max-height:220px}}
@@ -514,6 +520,52 @@ async function renderStickerAlbum(id){
   return h;
 }
 
+// 資料檢查:把一筆資料的每個欄位原樣攤開,不挑、不美化。
+// 這頁的用途是校對資料庫,所以寧可醜也不能漏欄位 —— 各圖鑑那些是挑過的呈現,這裡不是。
+function kvTree(v,depth=0){
+  if(v===null||v===undefined) return '<span class="nul">null</span>';
+  if(Array.isArray(v)){
+    if(!v.length) return '<span class="nul">[]</span>';
+    if(v.every(x=>x===null||typeof x!=='object'))
+      return v.map(x=>`<span class="tag">${esc(String(x))}</span>`).join('');
+    return `<ol class="kvlist">${v.map(x=>`<li>${kvTree(x,depth+1)}</li>`).join('')}</ol>`;
+  }
+  if(typeof v==='object'){
+    const rows=Object.entries(v).map(([k,x])=>
+      `<tr><th>${esc(k)}</th><td>${kvTree(x,depth+1)}</td></tr>`).join('');
+    return `<table class="kv">${rows}</table>`;
+  }
+  const t=String(v);
+  return /\.(png|webp|jpg)$/i.test(t)?`<code>${esc(t)}</code>`:rich(esc(t));
+}
+const RAWSRC={
+  夥伴:'90_圖鑑/夥伴.json', 寵物:'90_圖鑑/寵物.json', 時裝:'90_圖鑑/時裝.json',
+  珍寶:'90_圖鑑/珍寶.json', 珍藏:'90_圖鑑/珍藏.json', 坐騎:'90_圖鑑/坐騎.json',
+  裝備:'90_圖鑑/裝備.json', 能力:'90_圖鑑/能力.json', 資源:'90_圖鑑/資源.json',
+  道具:'90_圖鑑/道具.json', 貼紙集換:'90_圖鑑/貼紙集換.json',
+  招募:'95_其他/招募.json', 玩法:'95_其他/玩法.json',
+  飾框:'95_其他/飾框.json', 貼圖:'95_其他/貼圖.json', 規則:'95_其他/規則.json',
+};
+const RAW={};
+async function renderRaw(cat){
+  const src=RAWSRC[cat]; if(!src) return `<div class="empty">沒有「${esc(cat)}」這一類</div>`;
+  const d=RAW[cat] ??= await fetchJ(ROOT+src);
+  const listKey=Object.keys(d).find(k=>Array.isArray(d[k])&&d[k].length&&typeof d[k][0]==='object');
+  const items=d[listKey]||[];
+  const meta=Object.fromEntries(Object.entries(d).filter(([k])=>k!==listKey));
+  let h=`<div class="hdr"><h2>${esc(cat)} · 資料檢查</h2><span class="chip">${items.length} 筆</span></div>
+    <p class="sub">把資料庫裡的每一個欄位原樣列出來,用來校對。這頁不挑欄位也不美化,跟圖鑑頁不一樣。</p>
+    <details><summary class="sub">這一類的共用欄位(說明、圖片設定、範本那些)</summary>${kvTree(meta)}</details>`;
+  h+=`<section>${searchBox('搜尋任何欄位的內容…')} <span class="codex-count sub"></span>`;
+  for(const it of items){
+    const nm=it.名稱||it.套裝名||it.標題||it.檔名||it.id||'(無名)';
+    const k=JSON.stringify(it).toLowerCase();
+    h+=`<details data-k="${esc(k)}"><summary><b>${esc(String(nm))}</b>
+      <span class="chip">${Object.keys(it).length} 欄</span></summary>${kvTree(it)}</details>`;
+  }
+  return h+`</section>`;
+}
+
 async function renderRes(){
   const d=await codex('資源');
   let h=`<div class="hdr"><h2>資源</h2><span class="chip">${d.數量} 種</span></div><p class="sub">${esc(d.說明)}</p>`;
@@ -646,6 +698,7 @@ async function show(id){
     else if(id.startsWith('g_')) v.innerHTML=await renderGrowth(id.slice(2));
     else if(id==='itemdex') v.innerHTML=await renderItemCodex();
     else if(id==='res') v.innerHTML=await renderRes();
+    else if(id.startsWith('raw_')) v.innerHTML=await renderRaw(decodeURIComponent(id.slice(4)));
     else if(id==='item') v.innerHTML=await renderItems();
     else if(id==='doc') v.innerHTML=`<div class="hdr"><h2>欄位說明</h2></div>`+md(await fetchT(ROOT+'欄位說明.md'));
     else { const a=await fetchJ(ROOT+id+'/活動.json'); v.innerHTML=renderActivity(a,id); }
@@ -666,6 +719,9 @@ function buildNav(filter=''){
   let h=sec('act','活動',acts.map(a=>`<a href="#${encodeURIComponent(a.資料夾)}" data-id="${esc(a.資料夾)}"><span>${esc(a.名稱)}</span><small>${esc(a.分類||'')}</small></a>`).join(''),acts.length);
   h+=sec('codex','圖鑑',CODEX_NAV.filter(keep).map(link).join(''));
   h+=sec('growth','養成',GROWTH_PAGES.filter(keep).map(link).join(''));
+  h+=sec('raw','資料檢查',Object.keys(RAWSRC)
+    .filter(c=>!f||c.toLowerCase().includes(f))
+    .map(c=>`<a href="#raw_${encodeURIComponent(c)}" data-id="raw_${esc(c)}"><span>${esc(c)}</span></a>`).join(''));
   h+=sec('other','其他',[{id:'overview',name:'總覽與規則'},{id:'item',name:'道具查詢(純表格)'},{id:'doc',name:'欄位說明'}].filter(keep).map(link).join(''));
   $('#nav').innerHTML=h;
   const cur=decodeURIComponent(location.hash.slice(1));
