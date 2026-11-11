@@ -47,6 +47,17 @@ main{padding:24px 32px 64px;max-width:1300px;min-width:0}
 .chip.acc{border-color:var(--accent);color:var(--accent);background:var(--accent-bg)}
 .sub{color:var(--muted);font-size:13px;margin-bottom:18px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin:14px 0 20px}
+.icards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin:12px 0 20px}
+.icard{display:flex;gap:10px;border:1px solid var(--border);border-radius:8px;padding:10px;background:var(--card)}
+.icard .pic{flex:0 0 64px;width:64px;height:64px;display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--border);border-radius:6px;background:var(--muted-bg);overflow:hidden}
+.icard .pic img{max-width:100%;max-height:100%;display:block}
+.icard .pic.none{font-size:11px;color:var(--muted);text-align:center;line-height:1.3}
+.icard .txt{min-width:0}
+.icard .nm{font-weight:600;margin-bottom:3px}
+.icard .ds{color:var(--muted);font-size:12.5px;white-space:pre-wrap}
+.icard .tags{display:flex;flex-wrap:wrap;gap:4px;margin:3px 0}
+.icard .tags .chip{font-size:11px;padding:1px 7px}
 .kv{border:1px solid var(--border);border-radius:8px;padding:10px 12px;background:var(--card)}
 .kv b{display:block;font-size:11.5px;color:var(--muted);font-weight:500;margin-bottom:2px}
 .kv span{font-size:16px;font-weight:600}
@@ -112,7 +123,8 @@ const ROOT='整理/';
 let INDEX=[];
 const CODEX_PAGES=[{id:'partner',name:'夥伴圖鑑'},{id:'pet',name:'寵物圖鑑'},{id:'dress',name:'時裝圖鑑'},
   {id:'guardian',name:'珍寶圖鑑'},{id:'collect',name:'珍藏圖鑑'},{id:'car',name:'坐騎圖鑑'},{id:'equip',name:'裝備圖鑑'},
-  {id:'ability',name:'能力(學習)'},{id:'sticker',name:'貼紙集換'},{id:'item',name:'道具查詢'}];
+  {id:'ability',name:'能力(學習)'},{id:'sticker',name:'貼紙集換'},
+  {id:'itemdex',name:'道具圖鑑'},{id:'item',name:'道具查詢'}];
 const GROWTH_PAGES=[{id:'cult',name:'夥伴養成'},{id:'g_寵物',name:'寵物養成'},{id:'g_時裝',name:'時裝養成'},
   {id:'g_珍寶',name:'珍寶養成'},{id:'g_珍藏',name:'珍藏養成'},{id:'g_坐騎',name:'坐騎養成'},{id:'g_裝備',name:'裝備養成'}];
 const SPECIAL=[{id:'overview',name:'總覽與規則'},...CODEX_PAGES,...GROWTH_PAGES,{id:'doc',name:'欄位說明'}];
@@ -443,6 +455,31 @@ async function renderGrowth(name){
   return h;
 }
 
+async function renderItemCodex(){
+  const d=await codex('道具');
+  let h=`<div class="hdr"><h2>道具圖鑑</h2><span class="chip">${d.數量} 個</span><span class="chip acc">${d.有圖} 個有圖</span></div>
+    <p class="sub">${esc(d.說明)}</p>`;
+  h+=`<section>${searchBox('搜尋道具名稱 / 說明 / 分頁…')} <span class="codex-count sub"></span>`;
+  const tabs=d.分頁||[];
+  for(const tab of tabs){
+    const list=d.道具.filter(x=>x.背包分頁===tab);
+    if(!list.length) continue;
+    h+=`<h3 style="margin-top:16px">背包：${esc(tab)} <small>${list.length} 個</small></h3><div class="icards">`;
+    for(const it of list){
+      const k=[it.名稱,it.背包分頁,it.分類,it.品質,it.說明||''].join(' ').toLowerCase();
+      const pic=it.圖
+        ? `<div class="pic"><img src="${enc('圖片/道具/'+it.圖)}" alt="${esc(it.名稱)}" loading="lazy" width="64" height="64"></div>`
+        : `<div class="pic none">沒有<br>圖檔</div>`;
+      h+=`<div class="icard" data-k="${esc(k)}">${pic}<div class="txt">
+        <div class="nm">${esc(it.名稱)}</div>
+        <div class="tags"><span class="chip acc">${esc(it.品質)}</span><span class="chip">${esc(it.分類)}</span>${it.售價?`<span class="chip">賣 ${it.售價}</span>`:''}</div>
+        <div class="ds">${esc(it.說明||'—')}</div></div></div>`;
+    }
+    h+=`</div>`;
+  }
+  return h+`</section>`;
+}
+
 async function renderItems(){
   const d=await codex('道具');
   let h=`<div class="hdr"><h2>道具查詢</h2><span class="chip">${d.數量} 個</span></div><p class="sub">${esc(d.說明)}</p>`;
@@ -472,6 +509,7 @@ async function show(id){
     else if(id==='equip') v.innerHTML=await renderEquip();
     else if(id==='sticker') v.innerHTML=await renderSticker();
     else if(id.startsWith('g_')) v.innerHTML=await renderGrowth(id.slice(2));
+    else if(id==='itemdex') v.innerHTML=await renderItemCodex();
     else if(id==='item') v.innerHTML=await renderItems();
     else if(id==='doc') v.innerHTML=`<div class="hdr"><h2>欄位說明</h2></div>`+md(await fetchT(ROOT+'欄位說明.md'));
     else { const a=await fetchJ(ROOT+id+'/活動.json'); v.innerHTML=renderActivity(a,id); }
