@@ -388,6 +388,7 @@ async function renderCar(){
 async function renderSticker(){
   const d=await codex('貼紙集換');
   let h=`<div class="hdr"><h2>貼紙集換</h2><span class="chip">${d.數量} 本畫冊</span><span class="chip">${d.主題.length} 個主題</span></div><p class="sub">${esc(d.說明)}</p>`;
+  if(d.檔期觀測?.length) h+=`<section><h3>檔期</h3><p class="sub">client 設定表裡沒有日期(伺服器開活動時才下發),下面是遊戲內實際看到的紀錄</p>${tableFromObjs(d.檔期觀測.map(r=>({觀測日:r.觀測日,當期主題:r.當期主題,畫冊編號:r.畫冊編號,來源:r.來源,備註:r.備註||''})))}</section>`;
   const p=d.抽貼紙||{};
   h+=`<section><h3>抽貼紙</h3><div class="grid">${kv('抽一次',esc(p.抽一次的消耗||'—'))}</div>
     ${tableFromObjs(p.品質庫||[])}
