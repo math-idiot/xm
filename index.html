@@ -357,6 +357,7 @@ async function renderDress(){
     const tpl=s.升星範本?T[s.升星範本]:null;
     const cover=s.套裝圖?`<img class="suitpic" src="${enc('圖片/'+(d.套裝圖片||{}).資料夾+'/'+s.套裝圖)}?v=${(d.套裝圖片||{}).版本||''}" alt="${esc(s.套裝名)}" loading="lazy">`:thumb(d.圖片,s.圖,s.品質,s.套裝名);
     h+=`<details data-k="${esc(k)}"><summary>${cover}<b>${esc(s.套裝名)}</b><span class="chip">${s.件數} 件</span>${s.品牌?`<span class="chip">${esc(s.品牌)}</span>`:''}${tpl?`<span class="chip">最高 ${tpl.最高星} 星</span>`:''}</summary>
+      ${s.全身圖?`<img class="stand full" src="${enc('圖片/'+(d.全身圖片||{}).資料夾+'/'+s.全身圖)}?v=${(d.全身圖片||{}).版本||''}" alt="${esc(s.套裝名)}" loading="lazy">`:''}
       ${s.介紹?`<p class="sub">${esc(s.介紹)}</p>`:''}
       ${s.套裝加成||s.獲取?`<div class="grid">${s.套裝加成?kv('穿齊套裝加成',esc(s.套裝加成)):''}${s.獲取?kv('獲取',s.獲取.map(x=>`<span class="tag">${esc(x)}</span>`).join('')):''}</div>`:''}
       <h4 style="margin:12px 0 6px">單品 <small>五個風格標籤分數 + 自己的屬性加成</small></h4>
