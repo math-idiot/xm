@@ -56,6 +56,13 @@ main{padding:24px 32px 64px;max-width:1300px;min-width:0}
 .chip.acc{border-color:var(--accent);color:var(--accent);background:var(--accent-bg)}
 .sub{color:var(--muted);font-size:13px;margin-bottom:18px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin:14px 0 20px}
+.thm{display:inline-flex;width:38px;height:38px;flex:0 0 38px;align-items:center;justify-content:center;
+  background-size:100% 100%;background-repeat:no-repeat;vertical-align:middle;border-radius:6px}
+.thm.noframe{border:1px solid var(--border);background:var(--muted-bg)}
+.thm img{max-width:78%;max-height:78%;display:block}
+.thm.big{width:56px;height:56px;flex:0 0 56px}
+details>summary{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+details>summary>b{margin-right:2px}
 .hub{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin:14px 0}
 .hubcard{display:block;border:1px solid var(--border);border-radius:10px;padding:14px 16px;background:var(--card);
   text-decoration:none;color:var(--fg)}
@@ -135,6 +142,14 @@ body.print .app{grid-template-columns:1fr}body.print #side,body.print .menu-btn{
 const $=s=>document.querySelector(s);
 const enc=p=>p.split('/').map(encodeURIComponent).join('/');
 // 遊戲文案帶 Unity 富文本 <color=#rrggbb>…</color>,先逃脫再換成 span(只收 6 位十六進位,不讓任意標籤進來)
+// 圖鑑共用:品質飾框 + 縮圖。沒有圖就只畫空框,品質不再用文字寫
+function thumb(meta,file,quality,alt){
+  if(!meta) return '';
+  const fr=(meta.品質框||[]).includes(quality);
+  const st=fr?` style="background-image:url('${enc('圖片/框/品質框_'+quality+'.png')}')"`:'';
+  const img=file?`<img src="${enc('圖片/'+meta.資料夾+'/'+file)}?v=${meta.版本||''}" alt="${esc(alt||'')}" loading="lazy">`:'';
+  return `<span class="thm${fr?'':' noframe'}"${st} title="${esc(quality||'')}">${img}</span>`;
+}
 const rich=t=>esc(t||'').replace(/&lt;color=#([0-9a-fA-F]{6})&gt;/g,'<span style="color:#$1">').replace(/&lt;\/color&gt;/g,'</span>');
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const fetchJ=async p=>{const r=await fetch(enc(p),{cache:'no-store'});if(!r.ok)throw new Error(p+' '+r.status);return r.json()};
@@ -308,7 +323,7 @@ async function renderPartners(){
   h+=`<section>${searchBox('搜尋夥伴 / 稱號 / 職業 / 技能…')} <span class="codex-count sub"></span>`;
   for(const p of d.夥伴){
     const k=[p.名稱,p.稱號,p.稀有度,p.職業類型,p.定位,...(p.技能||[]).map(s=>s.名稱)].join(' ').toLowerCase();
-    h+=`<details data-k="${esc(k)}"><summary><b>${esc(p.名稱)}</b> <span class="chip acc">${esc(p.稀有度)}</span>${p.限定?'<span class="chip">限定</span>':''}${p.稱號?`<span class="chip">${esc(p.稱號)}</span>`:''}${p.職業類型?`<span class="chip">${esc(p.職業類型)}</span>`:''}${p.定位?`<span class="chip">${esc(p.定位)}</span>`:''}</summary>
+    h+=`<details data-k="${esc(k)}"><summary>${thumb(d.圖片,p.圖,p.品質||p.稀有度,p.名稱)}<b>${esc(p.名稱)}</b>${p.限定?'<span class="chip">限定</span>':''}${p.稱號?`<span class="chip">${esc(p.稱號)}</span>`:''}${p.職業類型?`<span class="chip">${esc(p.職業類型)}</span>`:''}${p.定位?`<span class="chip">${esc(p.定位)}</span>`:''}</summary>
       <div class="grid">${kv('突破上限',p.突破上限??'—')}${kv('可覺醒',yn(p.可覺醒))}${kv('心途上限',p.心途上限??'無')}
         ${kv('攻擊',`${p.攻擊.基礎??'—'} (成長 ${p.攻擊.成長??'—'})`)}${kv('防禦',`${p.防禦.基礎??'—'} (成長 ${p.防禦.成長??'—'})`)}${kv('氣勢',`${p.氣勢.基礎??'—'} (成長 ${p.氣勢.成長??'—'})`)}
         ${kv('星座',esc(p.星座||'—'))}${kv('生日',esc(p.生日||'—'))}${kv('血型',esc(p.血型||'—'))}${kv('年齡',esc(p.年齡||'—'))}</div>
@@ -325,7 +340,7 @@ async function renderDress(){
   for(const s of d.套裝){
     const k=[s.套裝名,s.品質,s.品牌,...(s.單品||[]).map(p=>p.名稱)].join(' ').toLowerCase();
     const tpl=s.升星範本?T[s.升星範本]:null;
-    h+=`<details data-k="${esc(k)}"><summary><b>${esc(s.套裝名)}</b> <span class="chip acc">${esc(s.品質)}</span><span class="chip">${s.件數} 件</span>${s.品牌?`<span class="chip">${esc(s.品牌)}</span>`:''}${tpl?`<span class="chip">最高 ${tpl.最高星} 星</span>`:''}</summary>
+    h+=`<details data-k="${esc(k)}"><summary>${thumb(d.圖片,s.圖,s.品質,s.套裝名)}<b>${esc(s.套裝名)}</b><span class="chip">${s.件數} 件</span>${s.品牌?`<span class="chip">${esc(s.品牌)}</span>`:''}${tpl?`<span class="chip">最高 ${tpl.最高星} 星</span>`:''}</summary>
       ${s.介紹?`<p class="sub">${esc(s.介紹)}</p>`:''}
       ${s.套裝加成?`<div class="grid">${kv('穿齊套裝加成',esc(s.套裝加成))}</div>`:''}
       <h4 style="margin:12px 0 6px">單品 <small>五個風格標籤分數 + 自己的屬性加成</small></h4>
@@ -343,7 +358,7 @@ async function renderPets(){
   h+=`<section>${searchBox('搜尋寵物 / 定位 / 技能…')} <span class="codex-count sub"></span>`;
   for(const p of d.寵物){
     const k=[p.名稱,p.定位,...(p.品質||[]).flatMap(q=>(q.技能||[]).map(s=>s.名稱||''))].join(' ').toLowerCase();
-    h+=`<details data-k="${esc(k)}"><summary><b>${esc(p.名稱)}</b> <span class="chip acc">${esc(p.定位||'')}</span>${p.變異?'<span class="chip">變異</span>':''}<span class="chip">${p.品質.map(q=>q.稀有度).join(' / ')}</span></summary>
+    h+=`<details data-k="${esc(k)}"><summary>${thumb(d.圖片,p.圖,(p.品質.slice(-1)[0]||{}).稀有度,p.名稱)}<b>${esc(p.名稱)}</b>${p.定位?`<span class="chip acc">${esc(p.定位)}</span>`:''}${p.變異?'<span class="chip">變異</span>':''}<span class="chip">${p.品質.map(q=>q.稀有度).join(' / ')}</span></summary>
       ${p.說明?`<p class="sub">${esc(p.說明)}</p>`:''}
       ${tableFromObjs(p.品質.map(q=>({稀有度:q.稀有度,資質:q.資質||'—',資質條數:q.資質條數??'—',
         技能:(q.技能||[]).map(s=>s.名稱||s.id).join('、'),
@@ -365,7 +380,7 @@ async function renderAbilities(){
   for(const a of d.能力){
     const e1=a.等級?.find(l=>l.效果);
     const k=[a.名稱,a.分類,a.品質,a.說明||'',e1?.效果||''].join(' ').toLowerCase();
-    h+=`<details data-k="${esc(k)}"><summary><b>${esc(a.名稱)}</b> <span class="chip acc">${esc(a.分類)}</span><span class="chip">${esc(a.品質)}</span><span class="chip">${a.等級數} 級</span></summary>
+    h+=`<details data-k="${esc(k)}"><summary>${thumb(d.圖片,a.圖,a.品質,a.名稱)}<b>${esc(a.名稱)}</b> <span class="chip acc">${esc(a.分類)}</span><span class="chip">${a.等級數} 級</span></summary>
       ${a.說明?`<p class="sub">${esc(a.說明)}</p>`:''}
       ${e1?.效果?`<p>${esc(e1.效果)}</p>`:''}
       <div class="grid">${kv('完美等級',a.完美等級??'—')}${kv('等級數',a.等級數)}${kv('取得方式',esc(a.取得方式||'—'))}</div>
@@ -382,7 +397,7 @@ async function renderGuardian(){
   for(const g of d.珍寶){
     const bind=(g.綁定夥伴||[]).join('、')||'通用';
     const k=[g.名稱,g.品質,g.定位,bind,...(g.技能||[]).map(t=>t.名稱)].join(' ').toLowerCase();
-    h+=`<details data-k="${esc(k)}"><summary><b>${esc(g.名稱)}</b> <span class="chip acc">${esc(g.品質)}</span>${g.定位?`<span class="chip">${esc(g.定位)}</span>`:''}<span class="chip">${esc(bind)}</span>${g.專屬?'<span class="chip">專屬</span>':''}${g.基礎戰力?`<span class="chip">戰力 ${g.基礎戰力}</span>`:''}</summary>
+    h+=`<details data-k="${esc(k)}"><summary>${thumb(d.圖片,g.圖,g.品質,g.名稱)}<b>${esc(g.名稱)}</b>${g.定位?`<span class="chip">${esc(g.定位)}</span>`:''}<span class="chip">${esc(bind)}</span>${g.專屬?'<span class="chip">專屬</span>':''}${g.基礎戰力?`<span class="chip">戰力 ${g.基礎戰力}</span>`:''}</summary>
       ${g.說明?`<p class="sub">${esc(g.說明)}</p>`:''}
       <div class="grid">${kv('階',g.階??'—')}${kv('啟動屬性',esc(g.啟動屬性||'—'))}${kv('分解可得',esc(g.分解可得||'—'))}${kv('合成需求數',g.合成需求數??'—')}</div>
       ${g.技能?.length?g.技能.map(t=>`<h4 style="margin:12px 0 6px">技能 — ${esc(t.名稱)}</h4>${tableFromObjs((t.等級||[]).map(l=>({級:l.級,說明:l.說明})))}`).join(''):'<p class="sub">技能詞條待補</p>'}</details>`;
@@ -396,7 +411,7 @@ async function renderCollect(){
   h+=`<section>${searchBox('搜尋珍藏 / 傳記…')} <span class="codex-count sub"></span>`;
   for(const c of d.珍藏){
     const k=[c.名稱,c.品質,c.說明||''].join(' ').toLowerCase();
-    h+=`<details data-k="${esc(k)}"><summary><b>${esc(c.名稱)}</b> <span class="chip acc">${esc(c.品質)}</span>${c.碎片?`<span class="chip">${esc(c.碎片)}/星</span>`:''}</summary>
+    h+=`<details data-k="${esc(k)}"><summary>${thumb(d.圖片,c.圖,c.品質,c.名稱)}<b>${esc(c.名稱)}</b>${c.碎片?`<span class="chip">${esc(c.碎片)}/星</span>`:''}</summary>
       ${c.說明?`<p class="sub">${esc(c.說明)}</p>`:''}
       <h4 style="margin:12px 0 6px">星級(累計屬性)</h4>${tableFromObjs((c.星級||[]).map(s=>({星:s.星,消耗:s.消耗||'—',累計屬性:s.累計屬性||'—'})))}
       ${c.傳記?.length?`<h4 style="margin:12px 0 6px">傳記</h4>${tableFromObjs(c.傳記.map(b=>({章:b.章,解鎖:`${b.解鎖星數}星`,標題:b.標題,內容:b.內容,獎勵:b.獎勵||''})))}`:''}</details>`;
@@ -410,7 +425,7 @@ async function renderCar(){
   let h=`<div class="hdr"><h2>坐騎圖鑑</h2><span class="chip">${d.數量} 台</span></div><p class="sub">${esc(d.說明)}</p>`;
   h+=`<section>${searchBox('搜尋坐騎…')} <span class="codex-count sub"></span>`;
   for(const c of d.坐騎){
-    h+=`<details data-k="${esc([c.名稱,c.品質,c.說明||''].join(' ').toLowerCase())}"><summary><b>${esc(c.名稱)}</b> <span class="chip acc">${esc(c.品質)}</span>${c.限定?'<span class="chip">限定</span>':''}${c.啟動屬性?`<span class="chip">${esc(c.啟動屬性)}</span>`:''}</summary>
+    h+=`<details data-k="${esc([c.名稱,c.品質,c.說明||''].join(' ').toLowerCase())}"><summary>${thumb(d.圖片,c.圖,c.品質,c.名稱)}<b>${esc(c.名稱)}</b>${c.限定?'<span class="chip">限定</span>':''}${c.啟動屬性?`<span class="chip">${esc(c.啟動屬性)}</span>`:''}</summary>
       ${c.說明?`<p class="sub">${esc(c.說明)}</p>`:''}
       <div class="grid">${kv('啟動屬性',esc(c.啟動屬性||'—'))}${kv('取得方式',esc(c.取得方式||'—'))}${kv('戰鬥技能',esc(c.戰鬥技能?.名稱||'—'))}</div>
       ${c.坐騎技能?.length?tableFromObjs(c.坐騎技能.map(s=>({技能:s.名稱,說明:s.說明||''}))):''}</details>`;
@@ -431,8 +446,8 @@ async function renderSticker(){
   for(const b of d.畫冊){
     const names=(b.貼紙||[]).map(x=>x.名稱).join('、');
     const rw=(b.獎勵||[]).map(r=>`集${r.集滿張數}張→${r.獎勵}`).join(' / ');
-    h+=`<details data-k="${esc([b.名稱,b.主題||'',names,rw].join(' ').toLowerCase())}"><summary><b>${esc(b.名稱)}</b> <span class="chip acc">${esc(b.主題||'')}</span><span class="chip">#${b.id}</span></summary>
-      ${tableFromObjs((b.貼紙||[]).map(x=>({編號:x.id,貼紙:x.名稱,品質:x.品質||'—'})))}
+    h+=`<details data-k="${esc([b.名稱,b.主題||'',names,rw].join(' ').toLowerCase())}"><summary>${thumb({...(d.圖片||{}),資料夾:(d.圖片||{}).封面資料夾},b.圖,'',b.名稱)}<b>${esc(b.名稱)}</b> <span class="chip acc">${esc(b.主題||'')}</span><span class="chip">#${b.id}</span></summary>
+      <div class="icards">${(b.貼紙||[]).map(x=>`<div class="icard">${thumb(d.圖片,x.圖,x.品質,x.名稱).replace('class="thm','class="thm big')}<div class="txt"><div class="nm">${esc(x.名稱)}</div><div class="ds">#${x.id}</div></div></div>`).join('')}</div>
       ${tableFromObjs((b.獎勵||[]).map(r=>({集滿張數:r.集滿張數,獎勵:r.獎勵,備註:r.備註||''})))}</details>`;
   }
   h+=`</section><ul class="notes">${(d.備註||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`;
@@ -445,7 +460,7 @@ async function renderEquip(){
   h+=`<section>${searchBox('搜尋裝備 / 部位 / 品質…')} <span class="codex-count sub"></span>`;
   for(const e of d.裝備){
     const k=[e.名稱,e.部位,e.品質,e.說明||''].join(' ').toLowerCase();
-    h+=`<details data-k="${esc(k)}"><summary><b>${esc(e.名稱)}</b> <span class="chip acc">${esc(e.品質)}</span><span class="chip">${esc(e.部位)}</span>${e.進階為?`<span class="chip">進階為 ${esc(e.進階為)}</span>`:''}</summary>
+    h+=`<details data-k="${esc(k)}"><summary>${thumb(d.圖片,e.圖,e.品質,e.名稱)}<b>${esc(e.名稱)}</b><span class="chip">${esc(e.部位)}</span>${e.進階為?`<span class="chip">進階為 ${esc(e.進階為)}</span>`:''}</summary>
       ${e.說明?`<p class="sub">${esc(e.說明)}</p>`:''}
       ${tableFromObjs((e.星級||[]).map(s=>({星:s.星,基礎屬性:s.基礎屬性||'—',強化成長:s.強化成長||'—','滿強化(300級)':s['滿強化(300級)']||'—',特殊屬性:s.特殊屬性||'—',寶石孔:s.寶石孔,升星消耗:s.升星消耗||'—',分解返還:s.分解返還||'—'})))}</details>`;
   }
