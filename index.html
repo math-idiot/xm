@@ -192,7 +192,8 @@ const enc=p=>p.split('/').map(encodeURIComponent).join('/');
 function thumb(meta,file,quality,alt){
   if(!meta) return '';
   const fr=(meta.品質框||[]).includes(quality);
-  const st=fr?` style="background-image:url('${enc('圖片/框/品質框_'+quality+'.png')}')"`:'';
+  // 品質框也要帶版本,不然換了圖瀏覽器還是給舊的(飾框那次就是這樣)
+  const st=fr?` style="background-image:url('${enc('圖片/框/品質框_'+quality+'.png')}?v=${meta.版本||''}')"`:'';
   const img=file?`<img src="${enc('圖片/'+meta.資料夾+'/'+file)}?v=${meta.版本||''}" alt="${esc(alt||'')}" loading="lazy">`:'';
   return `<span class="thm${fr?'':' noframe'}"${st} title="${esc(quality||'')}">${img}</span>`;
 }
@@ -564,8 +565,10 @@ async function renderStickerAlbum(id){
 // 飾框與貼圖。縮圖是照 icon 命名的(圖片/飾框/<icon>.png),所以用 `圖示` 那欄,
 // 不是素材樹自己的檔名。一筆可以有好幾張圖(宮牌四張、聊天氣泡左右兩張)——那是拼起來的,
 // 不是同一張的別名,所以全部並排畫出來。
-const decoImg=(x,k)=>`<img src="${'圖片/飾框/'}${encodeURIComponent(k)}.png" alt="${esc(x.名稱)}" loading="lazy">`;
-const PLATE=q=>q?`url('${enc('圖片/框/品質框_'+q+'.png')}')`:'';
+// 一定要帶 ?v= —— 不帶的話圖換了瀏覽器和 CDN 還是給舊的,看起來就像沒推上去
+var DECO_VER='';
+const decoImg=(x,k)=>`<img src="${'圖片/飾框/'}${encodeURIComponent(k)}.png?v=${DECO_VER}" alt="${esc(x.名稱)}" loading="lazy">`;
+const PLATE=q=>q?`url('${enc('圖片/框/品質框_'+q+'.png')}?v=${DECO_VER}')`:'';
 // 來源的優先順序:遊戲自己在道具說明裡寫的那句最準,其次是 GetWay 那排「可前往×××」,
 // 最後才是我掃設定表反查出來的。反查到「掉落池(來源待查)」而且已經有別的具名來源時就不列 ——
 // 旁邊已經寫著「心與喵窩活動中獲得」還掛一個「來源待查」,是自相矛盾。
@@ -618,7 +621,7 @@ const DECO_ORDER=['頭像','頭像框','聊天氣泡','宮牌','天幕','稱號'
 const DECO_WIDE=new Set(['聊天氣泡','宮牌','天幕','稱號']);
 
 async function renderDeco(){
-  const d=await codex('飾框');
+  const d=await codex('飾框'); DECO_VER=(d.圖片||{}).版本||'';
   const byKind=new Map();
   for(const x of d.飾框) (byKind.get(x.種類)||byKind.set(x.種類,[]).get(x.種類)).push(x);
   const kinds=[...DECO_ORDER.filter(k=>byKind.has(k)),...[...byKind.keys()].filter(k=>!DECO_ORDER.includes(k))];
@@ -635,7 +638,7 @@ async function renderDeco(){
 // 設定表的「表情」分頁裝了兩種東西,素材樹已經分成兩類,這支兩邊共用:
 //   表情符號 = 96px 的小圓臉(一欄小格)   貼圖 = 400px 的角色大圖(一欄大格)
 async function renderFace(cat){
-  const d=await codex(cat), list=d[cat]||[];
+  const d=await codex(cat), list=d[cat]||[]; DECO_VER=(d.圖片||{}).版本||'';
   const wide=cat!=='表情符號';
   const byTab=new Map();
   for(const x of list){const k=x.子分頁||'其他';if(!byTab.has(k))byTab.set(k,[]);byTab.get(k).push(x)}
@@ -745,8 +748,9 @@ async function renderDetail(cat,who){
   const x=list.find(i=>String(i.名稱||i.套裝名)===who)||list.find(i=>String(i.id??i.編號)===who);
   if(!x) return `<div class="empty">${esc(cat)}裡找不到「${esc(who)}」</div>`;
   PAGE_TITLE=`${x.名稱||x.套裝名} · ${cat}`;
-  const img=(t.圖夾&&x.圖)?`<img src="${enc('圖片/'+t.圖夾+'/'+x.圖)}" alt="" style="width:64px;height:64px;object-fit:contain">`:'';
-  const stand=(t.立繪&&t.立繪(x))?`<img class="stand full" src="${enc('圖片/'+(d.立繪圖片||{}).資料夾+'/'+t.立繪(x))}" alt="" loading="lazy">`:'';
+  const v=(d.圖片||{}).版本||'';
+  const img=(t.圖夾&&x.圖)?`<img src="${enc('圖片/'+t.圖夾+'/'+x.圖)}?v=${v}" alt="" style="width:64px;height:64px;object-fit:contain">`:'';
+  const stand=(t.立繪&&t.立繪(x))?`<img class="stand full" src="${enc('圖片/'+(d.立繪圖片||{}).資料夾+'/'+t.立繪(x))}?v=${(d.立繪圖片||{}).版本||''}" alt="" loading="lazy">`:'';
   let h=`<p class="sub"><a href="#raw_${encodeURIComponent(cat)}">← ${esc(cat)}</a></p>
     <div class="hdr">${img}<h2>${esc(String(x.名稱||x.套裝名))}</h2>
       ${(t.徽章?t.徽章(x):[]).filter(Boolean).map(b=>`<span class="chip">${esc(b)}</span>`).join('')}</div>
@@ -856,30 +860,40 @@ async function renderCodexHub(name){
   return h+`</div>`;
 }
 
+// 素材樹把道具的分類資訊收在 `類型` 底下、取得途徑收在 `獲得途徑` 底下。
+// 這幾個頁面本來是照舊的「整理」格式寫的(平的 `背包分頁`/`品質`/`獲取`),
+// 改接素材之後就全部讀到 undefined —— 道具圖卡因此整頁空白、表格欄位全空。
+const iTab=x=>(x.類型||{}).背包分頁||'';
+const iQ=x=>(x.類型||{}).品質||'';
+const iCat=x=>(x.類型||{}).主類型||x.分類||'';
+const iWay=x=>(x.獲得途徑||{}).遊戲標示||null;
+const iSell=x=>(x.價格||{}).售出||'';
+
 async function renderItemCodex(){
   const d=await codex('道具');
   let h=`<div class="hdr"><h2>道具圖鑑</h2><span class="chip">${d.數量} 個</span><span class="chip acc">${d.有圖} 個有圖</span></div>
     <p class="sub">${esc(d.說明)}</p>`;
   h+=`<section>${searchBox('搜尋道具名稱 / 說明 / 品質 / 分頁…')} <span class="codex-count sub"></span>
     <span style="float:right"><button class="btn" onclick="setItemMode('table')">改看表格</button></span>`;
-  const tabs=d.分頁||[];
+  // 分頁清單直接從資料推,不要靠 meta 另外記一份(記漏了整頁就空白)
+  const tabs=[...new Set(d.道具.map(iTab).filter(Boolean))];
   for(const tab of tabs){
-    const list=d.道具.filter(x=>x.背包分頁===tab);
+    const list=d.道具.filter(x=>iTab(x)===tab);
     if(!list.length) continue;
     h+=`<h3 style="margin-top:16px">背包：${esc(tab)} <small>${list.length} 個</small></h3><div class="icards">`;
     for(const it of list){
-      const k=[it.名稱,it.背包分頁,it.分類,it.品質,it.說明||'',gwText(it.獲取)].join(' ').toLowerCase();
-      const fr=(d.品質框||[]).includes(it.品質);
+      const k=[it.名稱,iTab(it),iCat(it),iQ(it),it.說明||'',gwText(iWay(it))].join(' ').toLowerCase();
+      const fr=!!iQ(it);
       const cls=fr?'pic':'pic noframe';
-      const style=fr?` style="background-image:url('${enc('圖片/框/品質框_'+it.品質+'.png')}')" title="${esc(it.品質)}"`:` title="${esc(it.品質)}"`;
+      const style=fr?` style="background-image:url('${enc('圖片/框/品質框_'+iQ(it)+'.png')}?v=${(d.圖片||{}).版本||''}')" title="${esc(iQ(it))}"`:'';
       const pic=it.圖
-        ? `<div class="${cls}"${style}><img src="${enc('圖片/道具/'+it.圖)}?v=${d.圖片版本||''}" alt="${esc(it.名稱)}" loading="lazy"></div>`
+        ? `<div class="${cls}"${style}><img src="${enc('圖片/道具/'+it.圖)}?v=${(d.圖片||{}).版本||''}" alt="${esc(it.名稱)}" loading="lazy"></div>`
         : `<div class="${cls} none"${style}>沒有<br>圖檔</div>`;
       h+=`<div class="icard" data-k="${esc(k)}">${pic}<div class="txt">
         <div class="nm">${esc(it.名稱)}</div>
-        <div class="tags"><span class="chip">${esc(it.分類)}</span>${it.售價?`<span class="chip">賣 ${it.售價}</span>`:''}</div>
+        <div class="tags"><span class="chip">${esc(iCat(it))}</span>${iSell(it)?`<span class="chip">賣 ${esc(iSell(it))}</span>`:''}</div>
         <div class="ds">${rich(it.說明||'—')}</div>
-        ${it.獲取?`<div class="ds"><b>獲取</b> ${gw(it.獲取)}</div>`:''}</div></div>`;
+        ${iWay(it)?`<div class="ds"><b>獲取</b> ${gw(iWay(it))}</div>`:''}</div></div>`;
     }
     h+=`</div>`;
   }
@@ -894,8 +908,8 @@ async function renderItems(){
     <span style="float:right"><button class="btn" onclick="setItemMode('card')">改看圖卡</button></span>
     <table><thead><tr><th>名稱</th><th>分頁</th><th>分類</th><th>品質</th><th>說明</th><th>獲取</th></tr></thead><tbody>`;
   for(const it of d.道具){
-    const k=[it.名稱,it.分類,it.品質,it.說明||'',gwText(it.獲取)].join(' ').toLowerCase();
-    h+=`<tr data-k="${esc(k)}"><td>${esc(it.名稱)}</td><td>${esc(it.背包分頁)}</td><td>${esc(it.分類)}</td><td>${esc(it.品質)}</td><td class="sub">${rich((it.說明||'').replace(/\n/g,' '))}</td><td class="sub">${gw(it.獲取)||'—'}</td></tr>`;
+    const k=[it.名稱,iTab(it),iCat(it),iQ(it),it.說明||'',gwText(iWay(it))].join(' ').toLowerCase();
+    h+=`<tr data-k="${esc(k)}"><td>${esc(it.名稱)}</td><td>${esc(iTab(it))}</td><td>${esc(iCat(it))}</td><td>${esc(iQ(it))}</td><td class="sub">${rich((it.說明||'').replace(/\n/g,' '))}</td><td class="sub">${gw(iWay(it))||'—'}</td></tr>`;
   }
   return h+`</tbody></table></section>`;
 }
