@@ -559,17 +559,19 @@ const PLATE=q=>q?`url('${enc('圖片/框/品質框_'+q+'.png')}')`:'';
 // 來源的優先順序:遊戲自己在道具說明裡寫的那句最準,其次是 GetWay 那排「可前往×××」,
 // 最後才是我掃設定表反查出來的。反查到「掉落池(來源待查)」而且已經有別的具名來源時就不列 ——
 // 旁邊已經寫著「心與喵窩活動中獲得」還掛一個「來源待查」,是自相矛盾。
-// 同一個來源會從三條路各講一次(「正心書院活動中獲得」/「正心書院」/反查的「正心書院」),
-// 比對時把後面那串套話剃掉再比,留字多的那個。
-const srcKey=t=>String(t).replace(/(活動中|活動)?(獲得|獲取)$|進度獎勵$|探索度獎勵$|獎勵$|掉落$|歷練$/g,'').trim()||String(t);
+// 來源一律只寫名字(「畫冊收集」),因為那是一個可以點過去的去處。
+// 同一個來源會從三條路各講一次(說明抽出來的、GetWay 的、反查的),
+// 比對時把「歷練」這種尾巴剃掉再比,留字多的那個(「京城歷練」勝過「京城」)。
+const srcKey=t=>String(t).replace(/歷練$/,'').trim()||String(t);
 function decoSrc(x){
   const named=(x.反查來源||[]).filter(t=>!/待查/.test(t));
   const vague=(x.反查來源||[]).filter(t=>/待查/.test(t));
   // 條件(幾級開放)屬於那個玩法自己的頁面,不寫在這張卡上
   let all=[...(x.獲取說明?[x.獲取說明]:[]),...(x.獲取||[]).map(g=>g.名稱),...named];
   if(!all.length) all=vague;
-  // 已經查到是哪一張地圖(「京城歷練」)就不要再掛籠統的「進行歷練」
-  if(all.some(t=>/.歷練$/.test(t)||/探索度獎勵$/.test(t))) all=all.filter(t=>t!=='進行歷練'&&t!=='歷練地點');
+  // 已經查到是哪一個去處(「京城歷練」「畫冊商店」)就不要再掛籠統的那個
+  if(all.some(t=>/.歷練$/.test(t))) all=all.filter(t=>t!=='進行歷練'&&t!=='歷練地點');
+  if(all.some(t=>t.length>2&&/(商店|商城)$/.test(t))) all=all.filter(t=>t!=='商店'&&t!=='商城');
   const best=new Map();
   for(const t of all){const k=srcKey(t);if(!best.has(k)||t.length>best.get(k).length)best.set(k,t);}
   return [...best.values()].map(t=>`<span class="tag">${esc(t)}</span>`).join('');
