@@ -554,6 +554,102 @@ const RAWSRC={
   飾框:'95_其他/飾框.json', 貼圖:'95_其他/貼圖.json', 規則:'95_其他/規則.json',
 };
 const RAW={};
+// ───────── 詳細頁範本 ─────────
+// 一個類別一份範本,同類所有東西都照這份畫,差別只在值。
+// 要加新類別就在 TPL 多一筆,不用再寫一支 render。
+const BLK = {
+  kv:(b,x)=>{
+    const rows=b.欄.map(([k,g])=>{const v=typeof g==='function'?g(x):x[g];
+      return (v===null||v===undefined||v==='')?'':kv(k,typeof v==='string'?rich(esc(v)):esc(v));}).join('');
+    return rows?`<div class="grid">${rows}</div>`:'';
+  },
+  文字:(b,x)=>{const v=b.值(x); return v?`<p class="sub" style="white-space:pre-wrap;font-size:14px">${rich(esc(v))}</p>`:'';},
+  標籤:(b,x)=>{const v=b.值(x); return v&&v.length?v.map(t=>`<span class="tag">${esc(typeof t==='object'?(t.名稱??JSON.stringify(t)):t)}</span>`).join(''):'';},
+  途徑:(b,x)=>{const v=b.值(x); return v&&v.length?gw(v):'';},
+  表格:(b,x)=>{const v=b.值(x); return v&&v.length?tableFromObjs(v.map(b.列||(r=>r))):'';},
+  圖組:(b,x)=>{const v=b.值(x)||[]; return v.length?`<div class="imgs">${v.map(u=>
+      `<a href="${enc(u)}" target="_blank"><img src="${enc(u)}" alt="" loading="lazy"></a>`).join('')}</div>`:'';},
+  引用:(b,x)=>{const v=b.值(x)||[]; return v.length?v.map(r=>
+      `<a class="tag" href="#find/${encodeURIComponent(r.類型)}/${encodeURIComponent(r.名稱)}">${esc(r.類型)}「${esc(r.名稱)}」</a>`).join(''):'';},
+};
+const TPL={
+  道具:{
+    來源:'90_圖鑑/道具.json', 清單:'道具', 圖夾:'道具',
+    副標:x=>[x.類型?.背包分頁,x.類型?.主類型].filter(Boolean).join(' · '),
+    徽章:x=>[x.類型?.品質,x.等級名稱||(x.等級?`${x.等級} 級`:null),x.是否可合成?'可合成':null],
+    區塊:[
+      {標題:'說明',型:'文字',值:x=>x.說明},
+      {標題:'基本',型:'kv',欄:[['編號','編號'],['圖像編號','對應圖像編號'],
+        ['品質',x=>x.類型?.品質],['背包分頁',x=>x.類型?.背包分頁],['主類型',x=>x.類型?.主類型],
+        ['等級上限',x=>x.等級上限名稱||x.等級上限],['使用上限','使用上限'],
+        ['售價',x=>x.價格?.售出],['購買',x=>x.價格?.購買],['過期天數','過期天數'],
+        ['堆疊上限',x=>x.堆疊上限??'設定表沒有這欄']]},
+      {標題:'獲取途徑(遊戲標示)',型:'途徑',值:x=>x.獲得途徑?.遊戲標示},
+      {標題:'還可以從這些地方拿到(反查設定表)',型:'標籤',值:x=>x.獲得途徑?.反查摘要},
+      {標題:'用途 · 可前往',型:'途徑',值:x=>x.用途?.前往},
+      {標題:'被這些地方消耗',型:'表格',值:x=>x.用途?.被消耗於},
+      {標題:'合成',型:'kv',欄:[['合成為',x=>x.合成?.合成為?.名稱],['需要數量',x=>x.合成?.需要數量],
+        ['依據',x=>x.合成?.依據]]},
+      {標題:'同一家族的其他階',型:'標籤',值:x=>x.變體?.map(v=>v.名稱)},
+      {標題:'請求獲取指令',型:'kv',欄:[['格式',x=>x.請求獲取指令?.格式],['範例',x=>x.請求獲取指令?.範例]]},
+    ],
+  },
+  夥伴:{
+    來源:'90_圖鑑/夥伴.json', 清單:'夥伴', 圖夾:'夥伴',
+    副標:x=>[x.稱號,x.職業類型,x.定位].filter(Boolean).join(' · '),
+    徽章:x=>[x.稀有度,x.品質,x.限定?'限定':null],
+    立繪:x=>x.立繪,
+    區塊:[
+      {標題:'介紹',型:'文字',值:x=>x.介紹},
+      {標題:'基本',型:'kv',欄:[['編號','id'],['稀有度','稀有度'],['品質','品質'],
+        ['職業類型','職業類型'],['定位','定位'],['突破上限','突破上限'],
+        ['可覺醒',x=>x.可覺醒?'可以':'不行'],['心途上限',x=>x.心途上限||'無'],
+        ['星座','星座'],['生日','生日'],['血型','血型'],['年齡','年齡']]},
+      {標題:'屬性',型:'kv',欄:[['攻擊',x=>`${x.攻擊?.基礎??'—'}(成長 ${x.攻擊?.成長??'—'})`],
+        ['防禦',x=>`${x.防禦?.基礎??'—'}(成長 ${x.防禦?.成長??'—'})`],
+        ['氣勢',x=>`${x.氣勢?.基礎??'—'}(成長 ${x.氣勢?.成長??'—'})`]]},
+      {標題:'獲取途徑',型:'途徑',值:x=>x.獲取},
+      {標題:'技能',型:'表格',值:x=>x.技能,
+        列:s=>({名稱:s.名稱,類型:s.類型,解鎖:s.解鎖階?`突破${s.解鎖階}階`:'初始',說明:s.說明})},
+      {標題:'好感獎勵',型:'表格',值:x=>x.好感獎勵,
+        列:r=>({好感度:r.好感度,等級:r.等級??'—',獎勵:r.獎勵||'—',語音:r.語音||''})},
+    ],
+  },
+};
+const TPLDATA={};
+async function renderDetail(cat,who){
+  const t=TPL[cat]; if(!t) return `<div class="empty">還沒有「${esc(cat)}」的詳細頁範本</div>`;
+  const d=TPLDATA[cat] ??= await fetchJ(ROOT+t.來源);
+  const list=d[t.清單]||[];
+  const x=list.find(i=>String(i.名稱||i.套裝名)===who)||list.find(i=>String(i.id??i.編號)===who);
+  if(!x) return `<div class="empty">${esc(cat)}裡找不到「${esc(who)}」</div>`;
+  PAGE_TITLE=`${x.名稱||x.套裝名} · ${cat}`;
+  const img=(t.圖夾&&x.圖)?`<img src="${enc('圖片/'+t.圖夾+'/'+x.圖)}" alt="" style="width:64px;height:64px;object-fit:contain">`:'';
+  const stand=(t.立繪&&t.立繪(x))?`<img class="stand full" src="${enc('圖片/'+(d.立繪圖片||{}).資料夾+'/'+t.立繪(x))}" alt="" loading="lazy">`:'';
+  let h=`<p class="sub"><a href="#raw_${encodeURIComponent(cat)}">← ${esc(cat)}</a></p>
+    <div class="hdr">${img}<h2>${esc(String(x.名稱||x.套裝名))}</h2>
+      ${(t.徽章?t.徽章(x):[]).filter(Boolean).map(b=>`<span class="chip">${esc(b)}</span>`).join('')}</div>
+    ${t.副標?`<p class="sub">${esc(t.副標(x)||'')}</p>`:''}${stand}`;
+  for(const b of t.區塊){
+    const body=(BLK[b.型]||(()=>''))(b,x);
+    if(body) h+=`<section><h3>${esc(b.標題)}</h3>${body}</section>`;
+  }
+  return h;
+}
+// 從別的地方引用過來:用類別+名字找,找到就跳詳細頁
+async function renderFind(cat,who){
+  if(TPL[cat]) return renderDetail(cat,who);
+  const src=RAWSRC[cat];
+  if(!src) return `<div class="empty">找不到「${esc(cat)}」</div>`;
+  const d=RAW[cat] ??= await fetchJ(ROOT+src);
+  const k=Object.keys(d).find(x=>Array.isArray(d[x])&&d[x].length&&typeof d[x][0]==='object');
+  const it=(d[k]||[]).find(i=>String(i.名稱)===who);
+  if(!it) return `<div class="empty">${esc(cat)}裡找不到「${esc(who)}」</div>`;
+  PAGE_TITLE=`${who} · ${cat}`;
+  return `<div class="hdr"><h2>${esc(who)}</h2><span class="chip">${esc(cat)}</span></div>
+    <p class="sub">這一類還沒有詳細頁範本,先把所有欄位列出來</p>${kvTree(it)}`;
+}
+
 async function renderRaw(cat){
   const src=RAWSRC[cat]; if(!src) return `<div class="empty">沒有「${esc(cat)}」這一類</div>`;
   const d=RAW[cat] ??= await fetchJ(ROOT+src);
@@ -567,8 +663,9 @@ async function renderRaw(cat){
   for(const it of items){
     const nm=it.名稱||it.套裝名||it.標題||it.檔名||it.id||'(無名)';
     const k=JSON.stringify(it).toLowerCase();
+    const link=TPL[cat]?`<a class="btn" style="margin-left:auto" href="#detail/${encodeURIComponent(cat)}/${encodeURIComponent(String(nm))}">詳細頁</a>`:'';
     h+=`<details data-k="${esc(k)}"><summary><b>${esc(String(nm))}</b>
-      <span class="chip">${Object.keys(it).length} 欄</span></summary>${kvTree(it)}</details>`;
+      <span class="chip">${Object.keys(it).length} 欄</span>${link}</summary>${kvTree(it)}</details>`;
   }
   return h+`</section>`;
 }
@@ -706,6 +803,8 @@ async function show(id){
     else if(id==='itemdex') v.innerHTML=await renderItemCodex();
     else if(id==='res') v.innerHTML=await renderRes();
     else if(id.startsWith('raw_')) v.innerHTML=await renderRaw(decodeURIComponent(id.slice(4)));
+    else if(id.startsWith('detail/')){const [,c,w]=id.split('/');v.innerHTML=await renderDetail(decodeURIComponent(c),decodeURIComponent(w));}
+    else if(id.startsWith('find/')){const [,c,w]=id.split('/');v.innerHTML=await renderFind(decodeURIComponent(c),decodeURIComponent(w));}
     else if(id==='item') v.innerHTML=await renderItems();
     else if(id==='doc') v.innerHTML=`<div class="hdr"><h2>欄位說明</h2></div>`+md(await fetchT(ROOT+'欄位說明.md'));
     else { const a=await fetchJ(ROOT+id+'/活動.json'); v.innerHTML=renderActivity(a,id); }
