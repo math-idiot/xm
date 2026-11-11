@@ -541,7 +541,7 @@ async function renderStickerTheme(t){
   h+=`<section>${searchBox('搜尋畫冊名 / 貼紙名 / 獎勵…')} <span class="codex-count sub"></span><div class="hub">`;
   for(const b of bs){
     const names=(b.貼紙||[]).map(x=>x.名稱).join('、');
-    const rw=(b.獎勵||[]).map(r=>`集${r.集滿張數}張→${r.獎勵}`).join(' / ');
+    const rw=(b.集滿獎勵||b.獎勵||[]).map(r=>`集${r.集滿張數}張→${r.獎勵}`).join(' / ');
     h+=`<a class="hubcard" data-k="${esc([b.名稱,names,rw].join(' ').toLowerCase())}" href="#sa_${b.id}">
       <div class="t"><span style="display:flex;align-items:center;gap:8px">${thumb(cov,b.圖,'',b.名稱)}${esc(b.名稱)}</span><span class="chip">#${b.id}</span></div>
       <div class="d">${(b.貼紙||[]).length} 張貼紙${rw?' · '+esc(rw.slice(0,60))+(rw.length>60?'…':''):''}</div></a>`;
@@ -558,7 +558,7 @@ async function renderStickerAlbum(id){
   h+=stBack('#st_'+encodeURIComponent(b.主題||''),b.主題||'回主題');
   h+=`<section><h3>貼紙 <small>${(b.貼紙||[]).length} 張</small></h3><div class="icards">`;
   h+=(b.貼紙||[]).map(x=>`<div class="icard">${thumb(d.圖片,x.圖,x.品質,x.名稱).replace('class="thm','class="thm big')}<div class="txt"><div class="nm">${esc(x.名稱)}</div><div class="ds">#${x.id}</div></div></div>`).join('');
-  h+=`</div></section><section><h3>集滿獎勵</h3>${tableFromObjs((b.獎勵||[]).map(r=>({集滿張數:r.集滿張數,獎勵:r.獎勵,備註:r.備註||''})))}</section>`;
+  h+=`</div></section><section><h3>集滿獎勵</h3>${tableFromObjs((b.集滿獎勵||b.獎勵||[]).map(r=>({集滿張數:r.集滿張數,獎勵:r.獎勵,備註:r.備註||''})))}</section>`;
   return h;
 }
 
@@ -801,10 +801,11 @@ async function renderRes(){
   h+=`<section>${searchBox('搜尋資源名 / 說明 / 獲取途徑…')} <span class="codex-count sub"></span>
     <table><thead><tr><th>名稱</th><th>品質</th><th>說明</th><th>獲取途徑</th></tr></thead><tbody>`;
   for(const r of d.資源){
-    const k=[r.名稱,r.品質,r.說明||'',gwText(r.獲取)].join(' ').toLowerCase();
+    const way=(r.獲得途徑||{}).遊戲標示||r.獲取;   // 素材是巢狀的,舊的「整理」格式是平的
+    const k=[r.名稱,r.品質,r.說明||'',gwText(way)].join(' ').toLowerCase();
     const pic=r.圖?`<img src="${enc('圖片/'+(d.圖片||{}).資料夾+'/'+r.圖)}?v=${(d.圖片||{}).版本||''}" alt="" style="height:28px;vertical-align:middle;margin-right:6px">`:'';
     h+=`<tr data-k="${esc(k)}"><td>${pic}<b>${esc(r.名稱)}</b></td><td>${esc(r.品質)}</td>
-      <td class="sub">${rich((r.說明||'—').replace(/\n/g,' '))}</td><td>${gw(r.獲取)||'<span class="sub">—</span>'}</td></tr>`;
+      <td class="sub">${rich((r.說明||'—').replace(/\n/g,' '))}</td><td>${gw(way)||'<span class="sub">—</span>'}</td></tr>`;
   }
   return h+`</tbody></table></section>`;
 }
