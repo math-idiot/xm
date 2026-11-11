@@ -63,6 +63,7 @@ main{padding:24px 32px 64px;max-width:1300px;min-width:0}
 .thm.big{width:56px;height:56px;flex:0 0 56px}
 details>summary{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 details>summary>b{margin-right:2px}
+.stand.full{max-height:420px}
 .stand{float:right;max-height:260px;margin:0 0 8px 14px;border-radius:8px}
 @media(max-width:600px){.stand{float:none;display:block;margin:0 auto 10px;max-height:220px}}
 .hub{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin:14px 0}
@@ -334,7 +335,7 @@ async function renderPartners(){
   for(const p of d.夥伴){
     const k=[p.名稱,p.稱號,p.稀有度,p.職業類型,p.定位,...(p.技能||[]).map(s=>s.名稱)].join(' ').toLowerCase();
     h+=`<details data-k="${esc(k)}"><summary>${thumb(d.圖片,p.圖,p.品質||p.稀有度,p.名稱)}<b>${esc(p.名稱)}</b>${p.限定?'<span class="chip">限定</span>':''}${p.稱號?`<span class="chip">${esc(p.稱號)}</span>`:''}${p.職業類型?`<span class="chip">${esc(p.職業類型)}</span>`:''}${p.定位?`<span class="chip">${esc(p.定位)}</span>`:''}</summary>
-      ${p.立繪?`<img class="stand" src="${enc('圖片/'+(d.立繪圖片||{}).資料夾+'/'+p.立繪)}?v=${(d.立繪圖片||{}).版本||''}" alt="${esc(p.名稱)}立繪" loading="lazy">`:''}
+      ${p.立繪?`<img class="stand${p.立繪類型==='全身'?' full':''}" src="${enc('圖片/'+(p.立繪類型==='全身'?(d.立繪圖片||{}).全身資料夾:(d.立繪圖片||{}).半身資料夾)+'/'+p.立繪)}?v=${(d.立繪圖片||{}).版本||''}" alt="${esc(p.名稱)}立繪" loading="lazy">`:''}
       <div class="grid">${kv('突破上限',p.突破上限??'—')}${kv('可覺醒',yn(p.可覺醒))}${kv('心途上限',p.心途上限??'無')}
         ${kv('攻擊',`${p.攻擊.基礎??'—'} (成長 ${p.攻擊.成長??'—'})`)}${kv('防禦',`${p.防禦.基礎??'—'} (成長 ${p.防禦.成長??'—'})`)}${kv('氣勢',`${p.氣勢.基礎??'—'} (成長 ${p.氣勢.成長??'—'})`)}
         ${kv('星座',esc(p.星座||'—'))}${kv('生日',esc(p.生日||'—'))}${kv('血型',esc(p.血型||'—'))}${kv('年齡',esc(p.年齡||'—'))}
