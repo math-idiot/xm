@@ -520,7 +520,8 @@ async function renderRes(){
     <table><thead><tr><th>名稱</th><th>品質</th><th>說明</th><th>獲取途徑</th></tr></thead><tbody>`;
   for(const r of d.資源){
     const k=[r.名稱,r.品質,r.說明||'',gwText(r.獲取)].join(' ').toLowerCase();
-    h+=`<tr data-k="${esc(k)}"><td><b>${esc(r.名稱)}</b></td><td>${esc(r.品質)}</td>
+    const pic=r.圖?`<img src="${enc('圖片/'+(d.圖片||{}).資料夾+'/'+r.圖)}?v=${(d.圖片||{}).版本||''}" alt="" style="height:28px;vertical-align:middle;margin-right:6px">`:'';
+    h+=`<tr data-k="${esc(k)}"><td>${pic}<b>${esc(r.名稱)}</b></td><td>${esc(r.品質)}</td>
       <td class="sub">${rich((r.說明||'—').replace(/\n/g,' '))}</td><td>${gw(r.獲取)||'<span class="sub">—</span>'}</td></tr>`;
   }
   return h+`</tbody></table></section>`;
