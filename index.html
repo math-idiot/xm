@@ -160,7 +160,8 @@ var INDEX=[];              // var:讓冒煙測試能注入
 var CODEX_DIR=[];                       // [{分類,說明,頁面:[{id,名稱,說明,數量,單位}]}]
 const CODEX_PAGES=[{id:'partner',name:'夥伴'},{id:'pet',name:'寵物'},{id:'guardian',name:'珍寶'},
   {id:'dress',name:'時裝'},{id:'car',name:'坐騎'},{id:'collect',name:'珍藏'},{id:'sticker',name:'貼紙集換'},
-  {id:'itemdex',name:'道具'},{id:'equip',name:'裝備'},{id:'ability',name:'能力(學習)'}];
+  {id:'itemdex',name:'道具'},{id:'equip',name:'裝備'},{id:'ability',name:'能力(學習)'},
+  {id:'res',name:'資源'}];
 const GROWTH_PAGES=[{id:'cult',name:'夥伴'},{id:'g_寵物',name:'寵物'},{id:'g_時裝',name:'時裝'},
   {id:'g_珍寶',name:'珍寶'},{id:'g_珍藏',name:'珍藏'},{id:'g_坐騎',name:'坐騎'},{id:'g_裝備',name:'裝備'}];
 // 側欄的圖鑑順序直接照「養成」那七類推出來,兩邊才不會各自漂走;
@@ -169,6 +170,9 @@ const CODEX_NAV=[...GROWTH_PAGES.map(g=>CODEX_PAGES.find(c=>c.name===g.name)).fi
   ...CODEX_PAGES.filter(c=>!GROWTH_PAGES.some(g=>g.name===c.name))];
 const SPECIAL=[{id:'overview',name:'總覽與規則'},...CODEX_PAGES,...GROWTH_PAGES,{id:'item',name:'道具查詢'},{id:'doc',name:'欄位說明'}];
 
+// 獲取途徑:[{名稱,說明,開啟條件}] → 一排標籤,條件寫在括號裡
+const gw=l=>!l||!l.length?'':l.map(g=>`<span class="tag" title="${esc(g.說明||'')}">${esc(g.名稱)}${g.開啟條件?` <small>(${esc(g.開啟條件)})</small>`:''}</span>`).join('');
+const gwText=l=>!l||!l.length?'—':l.map(g=>g.名稱+(g.開啟條件?`(${g.開啟條件})`:'')).join('、');
 const yn=v=>v===null||v===undefined?'<span class="nul">null</span>':v===true?'<span class="ok">有</span>':v===false?'<span class="no">無</span>':esc(v);
 const fmtReq=l=>(l||[]).map(x=>`${esc(x.項目??x.道具)}${x.數量??''}${x.單位??''}`).join('、');
 const fmtPrize=l=>(l||[]).map(x=>`<span class="tag">${esc(x.道具)}${x.數量??''}${x.單位??''}${x.備註?'('+esc(x.備註)+')':''}</span>`).join('');
@@ -330,7 +334,8 @@ async function renderPartners(){
     h+=`<details data-k="${esc(k)}"><summary>${thumb(d.圖片,p.圖,p.品質||p.稀有度,p.名稱)}<b>${esc(p.名稱)}</b>${p.限定?'<span class="chip">限定</span>':''}${p.稱號?`<span class="chip">${esc(p.稱號)}</span>`:''}${p.職業類型?`<span class="chip">${esc(p.職業類型)}</span>`:''}${p.定位?`<span class="chip">${esc(p.定位)}</span>`:''}</summary>
       <div class="grid">${kv('突破上限',p.突破上限??'—')}${kv('可覺醒',yn(p.可覺醒))}${kv('心途上限',p.心途上限??'無')}
         ${kv('攻擊',`${p.攻擊.基礎??'—'} (成長 ${p.攻擊.成長??'—'})`)}${kv('防禦',`${p.防禦.基礎??'—'} (成長 ${p.防禦.成長??'—'})`)}${kv('氣勢',`${p.氣勢.基礎??'—'} (成長 ${p.氣勢.成長??'—'})`)}
-        ${kv('星座',esc(p.星座||'—'))}${kv('生日',esc(p.生日||'—'))}${kv('血型',esc(p.血型||'—'))}${kv('年齡',esc(p.年齡||'—'))}</div>
+        ${kv('星座',esc(p.星座||'—'))}${kv('生日',esc(p.生日||'—'))}${kv('血型',esc(p.血型||'—'))}${kv('年齡',esc(p.年齡||'—'))}
+        ${p.獲取?kv('獲取',gw(p.獲取)):''}</div>
       ${p.技能?.length?`<h4 style="margin:12px 0 6px">技能</h4>${tableFromObjs(p.技能.map(s=>({名稱:s.名稱,類型:s.類型,解鎖:s.解鎖階?`突破${s.解鎖階}階`:'初始',說明:s.說明})))}`:''}
       ${p.介紹?`<h4 style="margin:12px 0 6px">介紹</h4><p class="sub" style="white-space:pre-wrap">${esc(p.介紹)}</p>`:''}</details>`;
   }
@@ -429,9 +434,9 @@ async function renderCar(){
   let h=`<div class="hdr"><h2>坐騎圖鑑</h2><span class="chip">${d.數量} 台</span></div><p class="sub">${esc(d.說明)}</p>`;
   h+=`<section>${searchBox('搜尋坐騎…')} <span class="codex-count sub"></span>`;
   for(const c of d.坐騎){
-    h+=`<details data-k="${esc([c.名稱,c.品質,c.說明||''].join(' ').toLowerCase())}"><summary>${thumb(d.圖片,c.圖,c.品質,c.名稱)}<b>${esc(c.名稱)}</b>${c.限定?'<span class="chip">限定</span>':''}${c.啟動屬性?`<span class="chip">${esc(c.啟動屬性)}</span>`:''}</summary>
+    h+=`<details data-k="${esc([c.名稱,c.品質,c.說明||'',c.取得方式||'',gwText(c.獲取)].join(' ').toLowerCase())}"><summary>${thumb(d.圖片,c.圖,c.品質,c.名稱)}<b>${esc(c.名稱)}</b>${c.限定?'<span class="chip">限定</span>':''}${c.啟動屬性?`<span class="chip">${esc(c.啟動屬性)}</span>`:''}</summary>
       ${c.說明?`<p class="sub">${esc(c.說明)}</p>`:''}
-      <div class="grid">${kv('啟動屬性',esc(c.啟動屬性||'—'))}${kv('取得方式',esc(c.取得方式||'—'))}${kv('戰鬥技能',esc(c.戰鬥技能?.名稱||'—'))}</div>
+      <div class="grid">${kv('啟動屬性',esc(c.啟動屬性||'—'))}${kv('取得方式',esc(c.取得方式||'—'))}${kv('戰鬥技能',esc(c.戰鬥技能?.名稱||'—'))}${c.獲取?kv('可前往',gw(c.獲取)):''}</div>
       ${c.坐騎技能?.length?tableFromObjs(c.坐騎技能.map(s=>({技能:s.名稱,說明:s.說明||''}))):''}</details>`;
   }
   return h+`</section>`;
@@ -496,6 +501,19 @@ async function renderStickerAlbum(id){
   return h;
 }
 
+async function renderRes(){
+  const d=await codex('資源');
+  let h=`<div class="hdr"><h2>資源</h2><span class="chip">${d.數量} 種</span></div><p class="sub">${esc(d.說明)}</p>`;
+  h+=`<section>${searchBox('搜尋資源名 / 說明 / 獲取途徑…')} <span class="codex-count sub"></span>
+    <table><thead><tr><th>名稱</th><th>品質</th><th>說明</th><th>獲取途徑</th></tr></thead><tbody>`;
+  for(const r of d.資源){
+    const k=[r.名稱,r.品質,r.說明||'',gwText(r.獲取)].join(' ').toLowerCase();
+    h+=`<tr data-k="${esc(k)}"><td><b>${esc(r.名稱)}</b></td><td>${esc(r.品質)}</td>
+      <td class="sub">${rich((r.說明||'—').replace(/\n/g,' '))}</td><td>${gw(r.獲取)||'<span class="sub">—</span>'}</td></tr>`;
+  }
+  return h+`</tbody></table></section>`;
+}
+
 async function renderEquip(){
   const d=await codex('裝備');
   let h=`<div class="hdr"><h2>裝備圖鑑</h2><span class="chip">${d.數量} 件</span></div><p class="sub">${esc(d.說明)}</p>`;
@@ -504,6 +522,7 @@ async function renderEquip(){
     const k=[e.名稱,e.部位,e.品質,e.說明||''].join(' ').toLowerCase();
     h+=`<details data-k="${esc(k)}"><summary>${thumb(d.圖片,e.圖,e.品質,e.名稱)}<b>${esc(e.名稱)}</b><span class="chip">${esc(e.部位)}</span>${e.進階為?`<span class="chip">進階為 ${esc(e.進階為)}</span>`:''}</summary>
       ${e.說明?`<p class="sub">${esc(e.說明)}</p>`:''}
+      ${e.獲取?`<div class="grid">${kv('獲取',gw(e.獲取))}</div>`:''}
       ${tableFromObjs((e.星級||[]).map(s=>({星:s.星,基礎屬性:s.基礎屬性||'—',強化成長:s.強化成長||'—','滿強化(300級)':s['滿強化(300級)']||'—',特殊屬性:s.特殊屬性||'—',寶石孔:s.寶石孔,升星消耗:s.升星消耗||'—',分解返還:s.分解返還||'—'})))}</details>`;
   }
   h+=`</section><section><h3>套裝加成</h3>${tableFromObjs(d.套裝加成||[])}</section>`;
@@ -558,7 +577,7 @@ async function renderItemCodex(){
     if(!list.length) continue;
     h+=`<h3 style="margin-top:16px">背包：${esc(tab)} <small>${list.length} 個</small></h3><div class="icards">`;
     for(const it of list){
-      const k=[it.名稱,it.背包分頁,it.分類,it.品質,it.說明||''].join(' ').toLowerCase();
+      const k=[it.名稱,it.背包分頁,it.分類,it.品質,it.說明||'',gwText(it.獲取)].join(' ').toLowerCase();
       const fr=(d.品質框||[]).includes(it.品質);
       const cls=fr?'pic':'pic noframe';
       const style=fr?` style="background-image:url('${enc('圖片/框/品質框_'+it.品質+'.png')}')" title="${esc(it.品質)}"`:` title="${esc(it.品質)}"`;
@@ -568,7 +587,8 @@ async function renderItemCodex(){
       h+=`<div class="icard" data-k="${esc(k)}">${pic}<div class="txt">
         <div class="nm">${esc(it.名稱)}</div>
         <div class="tags"><span class="chip">${esc(it.分類)}</span>${it.售價?`<span class="chip">賣 ${it.售價}</span>`:''}</div>
-        <div class="ds">${rich(it.說明||'—')}</div></div></div>`;
+        <div class="ds">${rich(it.說明||'—')}</div>
+        ${it.獲取?`<div class="ds"><b>獲取</b> ${gw(it.獲取)}</div>`:''}</div></div>`;
     }
     h+=`</div>`;
   }
@@ -581,10 +601,10 @@ async function renderItems(){
   let h=`<div class="hdr"><h2>道具查詢</h2><span class="chip">${d.數量} 個</span></div><p class="sub">${esc(d.說明)}</p>`;
   h+=`<section>${searchBox('搜尋道具名稱 / 說明…')} <span class="codex-count sub"></span>
     <span style="float:right"><button class="btn" onclick="setItemMode('card')">改看圖卡</button></span>
-    <table><thead><tr><th>名稱</th><th>分頁</th><th>分類</th><th>品質</th><th>說明</th></tr></thead><tbody>`;
+    <table><thead><tr><th>名稱</th><th>分頁</th><th>分類</th><th>品質</th><th>說明</th><th>獲取</th></tr></thead><tbody>`;
   for(const it of d.道具){
-    const k=[it.名稱,it.分類,it.品質,it.說明||''].join(' ').toLowerCase();
-    h+=`<tr data-k="${esc(k)}"><td>${esc(it.名稱)}</td><td>${esc(it.背包分頁)}</td><td>${esc(it.分類)}</td><td>${esc(it.品質)}</td><td class="sub">${rich((it.說明||'').replace(/\n/g,' '))}</td></tr>`;
+    const k=[it.名稱,it.分類,it.品質,it.說明||'',gwText(it.獲取)].join(' ').toLowerCase();
+    h+=`<tr data-k="${esc(k)}"><td>${esc(it.名稱)}</td><td>${esc(it.背包分頁)}</td><td>${esc(it.分類)}</td><td>${esc(it.品質)}</td><td class="sub">${rich((it.說明||'').replace(/\n/g,' '))}</td><td class="sub">${gw(it.獲取)||'—'}</td></tr>`;
   }
   return h+`</tbody></table></section>`;
 }
@@ -611,6 +631,7 @@ async function show(id){
     else if(id.startsWith('sa_')) v.innerHTML=await renderStickerAlbum(id.slice(3));
     else if(id.startsWith('g_')) v.innerHTML=await renderGrowth(id.slice(2));
     else if(id==='itemdex') v.innerHTML=await renderItemCodex();
+    else if(id==='res') v.innerHTML=await renderRes();
     else if(id==='item') v.innerHTML=await renderItems();
     else if(id==='doc') v.innerHTML=`<div class="hdr"><h2>欄位說明</h2></div>`+md(await fetchT(ROOT+'欄位說明.md'));
     else { const a=await fetchJ(ROOT+id+'/活動.json'); v.innerHTML=renderActivity(a,id); }
