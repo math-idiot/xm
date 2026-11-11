@@ -393,7 +393,7 @@ async function renderEquip(){
     const k=[e.名稱,e.部位,e.品質,e.說明||''].join(' ').toLowerCase();
     h+=`<details data-k="${esc(k)}"><summary><b>${esc(e.名稱)}</b> <span class="chip acc">${esc(e.品質)}</span><span class="chip">${esc(e.部位)}</span>${e.進階為?`<span class="chip">進階為 ${esc(e.進階為)}</span>`:''}</summary>
       ${e.說明?`<p class="sub">${esc(e.說明)}</p>`:''}
-      ${tableFromObjs((e.星級||[]).map(s=>({星:s.星,屬性:s.屬性||'—',寶石孔:s.寶石孔,強化上限:s.強化上限||'—',分解返還:s.分解返還||'—'})))}</details>`;
+      ${tableFromObjs((e.星級||[]).map(s=>({星:s.星,基礎屬性:s.基礎屬性||'—',強化成長:s.強化成長||'—','滿強化(300級)':s['滿強化(300級)']||'—',特殊屬性:s.特殊屬性||'—',寶石孔:s.寶石孔,升星消耗:s.升星消耗||'—',分解返還:s.分解返還||'—'})))}</details>`;
   }
   h+=`</section><section><h3>套裝加成</h3>${tableFromObjs(d.套裝加成||[])}</section>`;
   h+=`<section><h3>隨機詞條</h3><p class="sub">裝備會帶隨機詞條,稀有度越高越難出</p>${tableFromObjs((d.隨機詞條||[]).map(r=>({屬性:r.屬性,稀有度:r.稀有度,數值範圍:r.數值範圍})))}</section>`;
