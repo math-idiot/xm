@@ -56,6 +56,12 @@ main{padding:24px 32px 64px;max-width:1300px;min-width:0}
 .chip.acc{border-color:var(--accent);color:var(--accent);background:var(--accent-bg)}
 .sub{color:var(--muted);font-size:13px;margin-bottom:18px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin:14px 0 20px}
+.hub{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin:14px 0}
+.hubcard{display:block;border:1px solid var(--border);border-radius:10px;padding:14px 16px;background:var(--card);
+  text-decoration:none;color:var(--fg)}
+.hubcard:hover{border-color:var(--accent);background:var(--accent-bg)}
+.hubcard .t{font-weight:600;font-size:16px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.hubcard .d{color:var(--muted);font-size:13px;margin-top:6px}
 .icards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin:12px 0 20px}
 .icard{display:flex;gap:10px;border:1px solid var(--border);border-radius:8px;padding:10px;background:var(--card)}
 /* 品質框用遊戲原圖(從 commonqualitynew atlas 切出),道具圖疊在上面 */
@@ -134,14 +140,12 @@ const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&g
 const fetchJ=async p=>{const r=await fetch(enc(p),{cache:'no-store'});if(!r.ok)throw new Error(p+' '+r.status);return r.json()};
 const fetchT=async p=>{const r=await fetch(enc(p),{cache:'no-store'});if(!r.ok)throw new Error(p+' '+r.status);return r.text()};
 const ROOT='整理/';
-let INDEX=[];
-// 圖鑑拆成三組,側欄才不會一長串
-const CODEX_GROUPS=[
-  {g:'角色',    pages:[{id:'partner',name:'夥伴'},{id:'pet',name:'寵物'},{id:'guardian',name:'珍寶'}]},
-  {g:'外觀收藏',pages:[{id:'dress',name:'時裝'},{id:'car',name:'坐騎'},{id:'collect',name:'珍藏'},{id:'sticker',name:'貼紙集換'}]},
-  {g:'物品',    pages:[{id:'itemdex',name:'道具'},{id:'equip',name:'裝備'},{id:'ability',name:'能力(學習)'}]},
-];
-const CODEX_PAGES=CODEX_GROUPS.flatMap(x=>x.pages);
+var INDEX=[];              // var:讓冒煙測試能注入
+// 圖鑑分三類,側欄只放分類,點進去才列底下的頁(內容讀 整理/90_圖鑑/目錄.json)
+var CODEX_DIR=[];                       // [{分類,說明,頁面:[{id,名稱,說明,數量,單位}]}]
+const CODEX_PAGES=[{id:'partner',name:'夥伴'},{id:'pet',name:'寵物'},{id:'guardian',name:'珍寶'},
+  {id:'dress',name:'時裝'},{id:'car',name:'坐騎'},{id:'collect',name:'珍藏'},{id:'sticker',name:'貼紙集換'},
+  {id:'itemdex',name:'道具'},{id:'equip',name:'裝備'},{id:'ability',name:'能力(學習)'}];
 const GROWTH_PAGES=[{id:'cult',name:'夥伴'},{id:'g_寵物',name:'寵物'},{id:'g_時裝',name:'時裝'},
   {id:'g_珍寶',name:'珍寶'},{id:'g_珍藏',name:'珍藏'},{id:'g_坐騎',name:'坐騎'},{id:'g_裝備',name:'裝備'}];
 const SPECIAL=[{id:'overview',name:'總覽與規則'},...CODEX_PAGES,...GROWTH_PAGES,{id:'item',name:'道具查詢'},{id:'doc',name:'欄位說明'}];
@@ -472,6 +476,19 @@ async function renderGrowth(name){
   return h;
 }
 
+async function renderCodexHub(name){
+  const g=CODEX_DIR.find(x=>x.分類===name);
+  if(!g) return `<div class="empty">找不到分類「${esc(name)}」</div>`;
+  let h=`<div class="hdr"><h2>${esc(g.分類)}</h2><span class="chip">${g.頁面.length} 個圖鑑</span></div>
+    <p class="sub">${esc(g.說明||'')}</p><div class="hub">`;
+  for(const p of g.頁面){
+    h+=`<a class="hubcard" href="#${p.id}">
+      <div class="t">${esc(p.名稱)}${p.數量!=null?`<span class="chip">${p.數量} ${esc(p.單位||'筆')}</span>`:''}</div>
+      <div class="d">${esc(p.說明||'')}</div></a>`;
+  }
+  return h+`</div>`;
+}
+
 async function renderItemCodex(){
   const d=await codex('道具');
   let h=`<div class="hdr"><h2>道具圖鑑</h2><span class="chip">${d.數量} 個</span><span class="chip acc">${d.有圖} 個有圖</span></div>
@@ -520,7 +537,8 @@ async function show(id){
   document.querySelectorAll('.nav a').forEach(a=>a.classList.toggle('active',a.dataset.id===id));
   $('#side').classList.remove('open');
   try{
-    if(id==='overview') v.innerHTML=await renderOverview();
+    if(id.startsWith('cx_')) v.innerHTML=await renderCodexHub(decodeURIComponent(id.slice(3)));
+    else if(id==='overview') v.innerHTML=await renderOverview();
     else if(id==='cult') v.innerHTML=await renderCult();
     else if(id==='partner') v.innerHTML=await renderPartners();
     else if(id==='dress') v.innerHTML=await renderDress();
@@ -536,7 +554,7 @@ async function show(id){
     else if(id==='item') v.innerHTML=await renderItems();
     else if(id==='doc') v.innerHTML=`<div class="hdr"><h2>欄位說明</h2></div>`+md(await fetchT(ROOT+'欄位說明.md'));
     else { const a=await fetchJ(ROOT+id+'/活動.json'); v.innerHTML=renderActivity(a,id); }
-    document.title=(INDEX.find(x=>x.資料夾===id)?.名稱||SPECIAL.find(s=>s.id===id)?.name||id)+' · 巡夢少女 活動表格';
+    document.title=(id.startsWith('cx_')?decodeURIComponent(id.slice(3)):(INDEX.find(x=>x.資料夾===id)?.名稱||SPECIAL.find(s=>s.id===id)?.name||id))+' · 巡夢少女 活動表格';
   }catch(e){v.innerHTML=`<div class="empty">載入失敗:${esc(e.message)}</div>`;}
   window.scrollTo(0,0);
 }
@@ -551,7 +569,10 @@ function buildNav(filter=''){
     <summary>${title}${n!=null?`<small>${n}</small>`:''}</summary>${body}</details>`;
   const acts=INDEX.filter(a=>!f||(a.名稱+a.資料夾+(a.分類||'')+(a.類型||'')).toLowerCase().includes(f));
   let h=sec('act','活動',acts.map(a=>`<a href="#${encodeURIComponent(a.資料夾)}" data-id="${esc(a.資料夾)}"><span>${esc(a.名稱)}</span><small>${esc(a.分類||'')}</small></a>`).join(''),acts.length);
-  const codex=CODEX_GROUPS.map(g=>{const l=g.pages.filter(keep); return l.length?`<div class="nav-sub">${g.g}</div>`+l.map(link).join(''):'';}).join('');
+  // 沒搜尋時只列三個分類;一搜尋就直接列出符合的頁,免得還要先點分類
+  const codex=f
+    ? CODEX_DIR.flatMap(g=>g.頁面).filter(p=>p.名稱.toLowerCase().includes(f)).map(p=>link({id:p.id,name:p.名稱})).join('')
+    : CODEX_DIR.map(g=>`<a href="#cx_${encodeURIComponent(g.分類)}" data-id="cx_${esc(g.分類)}"><span>${esc(g.分類)}</span><small>${g.頁面.length}</small></a>`).join('');
   h+=sec('codex','圖鑑',codex);
   h+=sec('growth','養成',GROWTH_PAGES.filter(keep).map(link).join(''));
   h+=sec('other','其他',[{id:'overview',name:'總覽與規則'},{id:'item',name:'道具查詢(純表格)'},{id:'doc',name:'欄位說明'}].filter(keep).map(link).join(''));
@@ -561,6 +582,7 @@ function buildNav(filter=''){
 }
 (async()=>{
   try{INDEX=await fetchJ(ROOT+'目錄.json');}catch(e){$('#view').innerHTML=`<div class="empty">讀不到 整理/目錄.json:${esc(e.message)}</div>`;return;}
+  try{CODEX_DIR=(await fetchJ(ROOT+'90_圖鑑/目錄.json')).分類||[];}catch(e){CODEX_DIR=[];}
   buildNav();
   $('#q').addEventListener('input',e=>buildNav(e.target.value));
   $('#menu').addEventListener('click',()=>$('#side').classList.toggle('open'));
