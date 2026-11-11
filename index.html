@@ -158,7 +158,8 @@ const rich=t=>esc(t||'').replace(/&lt;color=#([0-9a-fA-F]{6})&gt;/g,'<span style
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const fetchJ=async p=>{const r=await fetch(enc(p),{cache:'no-store'});if(!r.ok)throw new Error(p+' '+r.status);return r.json()};
 const fetchT=async p=>{const r=await fetch(enc(p),{cache:'no-store'});if(!r.ok)throw new Error(p+' '+r.status);return r.text()};
-const ROOT='整理/';
+const ROOT='網頁資料/';   // 網頁只讀這裡(由 工具/打包素材.py 從 /srv/share/xm/素材 產生)
+                          // 整理/ 留著當紀錄與備案,網站不再讀它
 var INDEX=[];              // var:讓冒煙測試能注入
 // 圖鑑分三類,側欄只放分類,點進去才列底下的頁(內容讀 整理/90_圖鑑/目錄.json)
 var CODEX_DIR=[];                       // [{分類,說明,頁面:[{id,名稱,說明,數量,單位}]}]
