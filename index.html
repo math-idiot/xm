@@ -80,6 +80,23 @@ ol.kvlist>li{margin:4px 0}
 .hubcard:hover{border-color:var(--accent);background:var(--accent-bg)}
 .hubcard .t{font-weight:600;font-size:16px;display:flex;justify-content:space-between;align-items:center;gap:8px}
 .hubcard .d{color:var(--muted);font-size:13px;margin-top:6px}
+/* 飾框/貼圖:圖的比例差很多(頭像方的、聊天氣泡長條、宮牌大卡),所以不切成固定方框,
+   讓圖照原比例擺在一塊有底的區域裡,底下寫名字 */
+.decos{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,150px),1fr));gap:12px;margin:12px 0 20px}
+.decos.wide{grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr))}
+.deco{border:1px solid var(--border);border-radius:10px;background:var(--card);overflow:hidden;
+      display:flex;flex-direction:column}
+.deco .pic{height:110px;display:flex;align-items:center;justify-content:center;gap:6px;padding:8px;
+           background:var(--muted-bg)}
+.deco.wide .pic{height:130px}
+.deco .pic img{max-width:100%;max-height:100%;object-fit:contain}
+.deco .pic .none{font-size:12px;color:var(--sub)}
+.deco .nm{padding:7px 9px 2px;font-weight:500;font-size:14px}
+.deco .ds{padding:0 9px 9px;font-size:12px;color:var(--sub);line-height:1.45}
+/* 卡片只有 150px 寬,來源標籤常常比卡片長。標籤本身是 nowrap(不想讓玩法名被折斷),
+   所以在卡片裡改成可以折行,免得整條被切掉看不到後半 */
+.deco .ds .tag{white-space:normal;word-break:break-all}
+.deco .ds b{font-weight:500;color:var(--fg)}
 .icards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:10px;margin:12px 0 20px}
 .icard{display:flex;gap:10px;border:1px solid var(--border);border-radius:8px;padding:10px;background:var(--card)}
 /* 品質框用遊戲原圖(從 commonqualitynew atlas 切出),道具圖疊在上面 */
@@ -178,7 +195,7 @@ var CODEX_DIR=[];                       // [{分類,說明,頁面:[{id,名稱,�
 const CODEX_PAGES=[{id:'partner',name:'夥伴'},{id:'pet',name:'寵物'},{id:'guardian',name:'珍寶'},
   {id:'dress',name:'時裝'},{id:'car',name:'坐騎'},{id:'collect',name:'珍藏'},{id:'sticker',name:'貼紙集換'},
   {id:'itemdex',name:'道具'},{id:'equip',name:'裝備'},{id:'ability',name:'能力(學習)'},
-  {id:'res',name:'資源'}];
+  {id:'res',name:'資源'},{id:'deco',name:'飾框'},{id:'face',name:'貼圖'}];
 const GROWTH_PAGES=[{id:'cult',name:'夥伴'},{id:'g_寵物',name:'寵物'},{id:'g_時裝',name:'時裝'},
   {id:'g_珍寶',name:'珍寶'},{id:'g_珍藏',name:'珍藏'},{id:'g_坐騎',name:'坐騎'},{id:'g_裝備',name:'裝備'}];
 // 側欄的圖鑑順序直接照「養成」那七類推出來,兩邊才不會各自漂走;
@@ -527,6 +544,57 @@ async function renderStickerAlbum(id){
   return h;
 }
 
+// 飾框與貼圖。縮圖是照 icon 命名的(圖片/飾框/<icon>.png),所以用 `圖示` 那欄,
+// 不是素材樹自己的檔名。一筆可以有好幾張圖(宮牌四張、聊天氣泡左右兩張)——那是拼起來的,
+// 不是同一張的別名,所以全部並排畫出來。
+const decoPics=x=>(x.圖示||[]).map(k=>`<img src="${'圖片/飾框/'}${encodeURIComponent(k)}.png" alt="${esc(x.名稱)}" loading="lazy">`).join('');
+function decoCard(x,wide){
+  const pics=decoPics(x);
+  const meta=[x.子分頁?esc(x.子分頁):'',x.品質?esc(x.品質):''].filter(Boolean).join(' · ');
+  return `<div class="deco${wide?' wide':''}" data-k="${esc([x.名稱,x.種類,x.品質,x.子分頁||'',x.說明||''].join(' ').toLowerCase())}">
+    <div class="pic">${pics||'<span class="none">沒有圖</span>'}</div>
+    <div class="nm">${esc(x.名稱)}</div>
+    <div class="ds">${meta?`<b>${meta}</b><br>`:''}${esc(x.說明||'')}${gw(x.獲取)}
+      ${(x.反查來源||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div></div>`;
+}
+const DECO_ORDER=['頭像','頭像框','聊天氣泡','宮牌','天幕','稱號'];
+const DECO_WIDE=new Set(['聊天氣泡','宮牌','天幕','稱號']);
+
+async function renderDeco(){
+  const d=await codex('飾框');
+  const byKind=new Map();
+  for(const x of d.飾框) (byKind.get(x.種類)||byKind.set(x.種類,[]).get(x.種類)).push(x);
+  const kinds=[...DECO_ORDER.filter(k=>byKind.has(k)),...[...byKind.keys()].filter(k=>!DECO_ORDER.includes(k))];
+  let h=`<div class="hdr"><h2>飾框</h2><span class="chip">${d.數量} 個</span><span class="chip acc">${(d.圖片||{}).有圖} 個有圖</span></div><p class="sub">${esc(d.說明)}</p>`;
+  h+=`<section>${searchBox('搜尋名稱 / 種類 / 說明…')} <span class="codex-count sub"></span></section>`;
+  for(const k of kinds){
+    const list=byKind.get(k), wide=DECO_WIDE.has(k), got=list.filter(x=>x.圖示).length;
+    h+=`<section><h3>${esc(k)} <small>${list.length} 個 · ${got} 個有圖</small></h3>
+      <div class="decos${wide?' wide':''}">${list.map(x=>decoCard(x,wide)).join('')}</div></section>`;
+  }
+  return h;
+}
+
+// 這一類在遊戲裡是同一個「表情」分頁,但實際上是兩種東西:
+// 小圓臉的表情符號(預設那包)和角色大圖的貼圖(其他三包)。分開列才看得清楚。
+async function renderFace(){
+  const d=await codex('貼圖');
+  const group=(list,key)=>{const m=new Map();for(const x of list){const k=key(x)||'其他';if(!m.has(k))m.set(k,[]);m.get(k).push(x)}return m};
+  const byKind=group(d.貼圖,x=>x.種類);
+  let h=`<div class="hdr"><h2>貼圖</h2><span class="chip">${d.數量} 個</span><span class="chip acc">${(d.圖片||{}).有圖} 個有圖</span></div><p class="sub">${esc(d.說明)}</p>`;
+  h+=`<section>${searchBox('搜尋貼圖名稱 / 說明…')} <span class="codex-count sub"></span></section>`;
+  for(const kind of ['表情符號','貼圖',...[...byKind.keys()].filter(k=>k!=='表情符號'&&k!=='貼圖')]){
+    const list=byKind.get(kind); if(!list) continue;
+    const wide=kind!=='表情符號';
+    h+=`<section><h3>${esc(kind)} <small>${list.length} 個 · ${list.filter(x=>x.圖示).length} 個有圖</small></h3>`;
+    for(const [tab,sub] of group(list,x=>x.子分頁))
+      h+=`<h4 class="sub" style="margin:10px 0 0">${esc(tab)} <small>${sub.length}</small></h4>
+        <div class="decos${wide?' wide':''}">${sub.map(x=>decoCard(x,wide)).join('')}</div>`;
+    h+=`</section>`;
+  }
+  return h;
+}
+
 // 資料檢查:把一筆資料的每個欄位原樣攤開,不挑、不美化。
 // 這頁的用途是校對資料庫,所以寧可醜也不能漏欄位 —— 各圖鑑那些是挑過的呈現,這裡不是。
 function kvTree(v,depth=0){
@@ -550,8 +618,9 @@ const RAWSRC={
   珍寶:'90_圖鑑/珍寶.json', 珍藏:'90_圖鑑/珍藏.json', 坐騎:'90_圖鑑/坐騎.json',
   裝備:'90_圖鑑/裝備.json', 能力:'90_圖鑑/能力.json', 資源:'90_圖鑑/資源.json',
   道具:'90_圖鑑/道具.json', 貼紙集換:'90_圖鑑/貼紙集換.json',
+  飾框:'90_圖鑑/飾框.json', 貼圖:'90_圖鑑/貼圖.json',
   招募:'95_其他/招募.json', 玩法:'95_其他/玩法.json',
-  飾框:'95_其他/飾框.json', 貼圖:'95_其他/貼圖.json', 規則:'95_其他/規則.json',
+  規則:'95_其他/規則.json',
 };
 const RAW={};
 // ───────── 詳細頁範本 ─────────
@@ -797,6 +866,8 @@ async function show(id){
     else if(id==='car') v.innerHTML=await renderCar();
     else if(id==='equip') v.innerHTML=await renderEquip();
     else if(id==='sticker') v.innerHTML=await renderSticker();
+    else if(id==='deco') v.innerHTML=await renderDeco();
+    else if(id==='face') v.innerHTML=await renderFace();
     else if(id.startsWith('st_')) v.innerHTML=await renderStickerTheme(decodeURIComponent(id.slice(3)));
     else if(id.startsWith('sa_')) v.innerHTML=await renderStickerAlbum(id.slice(3));
     else if(id.startsWith('g_')) v.innerHTML=await renderGrowth(id.slice(2));
