@@ -478,7 +478,7 @@ async function renderItemCodex(){
       const qc=d.品質色?.[it.品質];
       const style=qc?` style="--ql:${qc.淺底};--qd:${qc.深底}" title="${esc(it.品質)}"`:'';
       const pic=it.圖
-        ? `<div class="pic"${style}><img src="${enc('圖片/道具/'+it.圖)}" alt="${esc(it.名稱)}" loading="lazy" width="64" height="64"></div>`
+        ? `<div class="pic"${style}><img src="${enc('圖片/道具/'+it.圖)}?v=${d.圖片版本||''}" alt="${esc(it.名稱)}" loading="lazy" width="64" height="64"></div>`
         : `<div class="pic none"${style}>沒有<br>圖檔</div>`;
       h+=`<div class="icard" data-k="${esc(k)}">${pic}<div class="txt">
         <div class="nm">${esc(it.名稱)}</div>
