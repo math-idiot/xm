@@ -49,12 +49,11 @@ main{padding:24px 32px 64px;max-width:1300px;min-width:0}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin:14px 0 20px}
 .icards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin:12px 0 20px}
 .icard{display:flex;gap:10px;border:1px solid var(--border);border-radius:8px;padding:10px;background:var(--card)}
-.icard .pic{--q:var(--ql,var(--border));position:relative;flex:0 0 64px;width:64px;height:64px;display:flex;align-items:center;justify-content:center;
-  border:2px solid var(--q,var(--border));border-radius:8px;overflow:hidden;
-  background:linear-gradient(160deg,color-mix(in srgb,var(--q,#888) 26%,transparent),color-mix(in srgb,var(--q,#888) 8%,transparent))}
-.icard .pic::before,.icard .pic::after{content:"";position:absolute;width:7px;height:7px;border:2px solid var(--q,var(--border));opacity:.9}
-.icard .pic::before{top:1px;left:1px;border-right:0;border-bottom:0;border-radius:3px 0 0 0}
-.icard .pic::after{bottom:1px;right:1px;border-left:0;border-top:0;border-radius:0 0 3px 0}
+/* 品質框用遊戲原圖(從 commonqualitynew atlas 切出),道具圖疊在上面 */
+.icard .pic{position:relative;flex:0 0 64px;width:64px;height:64px;display:flex;align-items:center;justify-content:center;
+  background-size:100% 100%;background-repeat:no-repeat}
+.icard .pic img{max-width:78%;max-height:78%}
+.icard .pic.noframe{border:1px solid var(--border);border-radius:8px;background:var(--muted-bg)}
 .icard .pic img{max-width:100%;max-height:100%;display:block}
 .icard .pic.none{font-size:11px;color:var(--muted);text-align:center;line-height:1.3}
 .icard .txt{min-width:0}
@@ -62,8 +61,6 @@ main{padding:24px 32px 64px;max-width:1300px;min-width:0}
 .icard .ds{color:var(--muted);font-size:12.5px;white-space:pre-wrap}
 .icard .tags{display:flex;flex-wrap:wrap;gap:4px;margin:3px 0}
 .icard .tags .chip{font-size:11px;padding:1px 7px}
-@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .icard .pic{--q:var(--qd,var(--border))} }
-:root[data-theme="dark"] .icard .pic{--q:var(--qd,var(--border))}
 .kv{border:1px solid var(--border);border-radius:8px;padding:10px 12px;background:var(--card)}
 .kv b{display:block;font-size:11.5px;color:var(--muted);font-weight:500;margin-bottom:2px}
 .kv span{font-size:16px;font-weight:600}
@@ -475,11 +472,12 @@ async function renderItemCodex(){
     h+=`<h3 style="margin-top:16px">背包：${esc(tab)} <small>${list.length} 個</small></h3><div class="icards">`;
     for(const it of list){
       const k=[it.名稱,it.背包分頁,it.分類,it.品質,it.說明||''].join(' ').toLowerCase();
-      const qc=d.品質色?.[it.品質];
-      const style=qc?` style="--ql:${qc.淺底};--qd:${qc.深底}" title="${esc(it.品質)}"`:'';
+      const fr=(d.品質框||[]).includes(it.品質);
+      const cls=fr?'pic':'pic noframe';
+      const style=fr?` style="background-image:url('${enc('圖片/框/品質框_'+it.品質+'.png')}')" title="${esc(it.品質)}"`:` title="${esc(it.品質)}"`;
       const pic=it.圖
-        ? `<div class="pic"${style}><img src="${enc('圖片/道具/'+it.圖)}?v=${d.圖片版本||''}" alt="${esc(it.名稱)}" loading="lazy" width="64" height="64"></div>`
-        : `<div class="pic none"${style}>沒有<br>圖檔</div>`;
+        ? `<div class="${cls}"${style}><img src="${enc('圖片/道具/'+it.圖)}?v=${d.圖片版本||''}" alt="${esc(it.名稱)}" loading="lazy"></div>`
+        : `<div class="${cls} none"${style}>沒有<br>圖檔</div>`;
       h+=`<div class="icard" data-k="${esc(k)}">${pic}<div class="txt">
         <div class="nm">${esc(it.名稱)}</div>
         <div class="tags"><span class="chip">${esc(it.分類)}</span>${it.售價?`<span class="chip">賣 ${it.售價}</span>`:''}</div>
