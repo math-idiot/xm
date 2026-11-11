@@ -437,24 +437,62 @@ async function renderCar(){
   return h+`</section>`;
 }
 
+// 貼紙集換分三層:主題 → 畫冊 → 貼紙。126 本畫冊 × 9 張貼紙全攤開太多了,一層一層點進去
+const stCover=d=>({...(d.圖片||{}),資料夾:(d.圖片||{}).封面資料夾});
+const stBooks=(d,t)=>d.畫冊.filter(b=>b.主題===t);
+const stBack=(href,text)=>`<p class="sub"><a href="${href}">← ${esc(text)}</a></p>`;
+
 async function renderSticker(){
   const d=await codex('貼紙集換');
-  let h=`<div class="hdr"><h2>貼紙集換</h2><span class="chip">${d.數量} 本畫冊</span><span class="chip">${d.主題.length} 個主題</span></div><p class="sub">${esc(d.說明)}</p>`;
+  let h=`<div class="hdr"><h2>貼紙集換</h2><span class="chip">${d.主題.length} 個主題</span><span class="chip">${d.數量} 本畫冊</span></div><p class="sub">${esc(d.說明)}</p>`;
+  h+=`<section><h3>主題</h3><p class="sub">選主題 → 選畫冊 → 看那本的 9 張貼紙與獎勵</p>
+    ${searchBox('搜尋主題 / 畫冊名 / 貼紙名…')} <span class="codex-count sub"></span><div class="hub">`;
+  for(const t of d.主題){
+    const bs=stBooks(d,t), n=bs.reduce((a,b)=>a+(b.貼紙||[]).length,0);
+    const k=[t,...bs.map(b=>b.名稱),...bs.flatMap(b=>(b.貼紙||[]).map(x=>x.名稱))].join(' ').toLowerCase();
+    h+=`<a class="hubcard" data-k="${esc(k)}" href="#st_${encodeURIComponent(t)}">
+      <div class="t"><span>${esc(t)}</span><span class="chip">${bs.length} 本</span></div>
+      <div class="d">#${bs[0]?.id ?? '?'}~#${bs[bs.length-1]?.id ?? '?'} · ${n} 張貼紙</div></a>`;
+  }
+  h+=`</div></section>`;
   if(d.檔期觀測?.length) h+=`<section><h3>檔期</h3><p class="sub">client 設定表裡沒有日期(伺服器開活動時才下發),下面是遊戲內實際看到的紀錄</p>${tableFromObjs(d.檔期觀測.map(r=>({觀測日:r.觀測日,當期主題:r.當期主題,畫冊編號:r.畫冊編號,來源:r.來源,備註:r.備註||''})))}</section>`;
   const p=d.抽貼紙||{};
   h+=`<section><h3>抽貼紙</h3><div class="grid">${kv('抽一次',esc(p.抽一次的消耗||'—'))}</div>
     ${tableFromObjs(p.品質庫||[])}
     <details style="margin-top:8px"><summary class="sub">抽到重複的機率(依該庫收集進度)</summary>${tableFromObjs(p.重複機率||[])}</details>
     <h3 style="margin-top:14px">貼紙商店套裝折扣</h3>${tableFromObjs(p.貼紙商店套裝折扣||[])}</section>`;
-  h+=`<section><h3>畫冊</h3>${searchBox('搜尋畫冊 / 主題 / 貼紙名 / 獎勵…')} <span class="codex-count sub"></span>`;
-  for(const b of d.畫冊){
+  h+=`<ul class="notes">${(d.備註||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`;
+  return h;
+}
+
+async function renderStickerTheme(t){
+  const d=await codex('貼紙集換');
+  const bs=stBooks(d,t);
+  if(!bs.length) return `<div class="empty">找不到主題「${esc(t)}」</div>`;
+  PAGE_TITLE=t+' · 貼紙集換';
+  const cov=stCover(d);
+  let h=`<div class="hdr"><h2>${esc(t)}</h2><span class="chip">${bs.length} 本畫冊</span></div>${stBack('#sticker','所有主題')}`;
+  h+=`<section>${searchBox('搜尋畫冊名 / 貼紙名 / 獎勵…')} <span class="codex-count sub"></span><div class="hub">`;
+  for(const b of bs){
     const names=(b.貼紙||[]).map(x=>x.名稱).join('、');
     const rw=(b.獎勵||[]).map(r=>`集${r.集滿張數}張→${r.獎勵}`).join(' / ');
-    h+=`<details data-k="${esc([b.名稱,b.主題||'',names,rw].join(' ').toLowerCase())}"><summary>${thumb({...(d.圖片||{}),資料夾:(d.圖片||{}).封面資料夾},b.圖,'',b.名稱)}<b>${esc(b.名稱)}</b> <span class="chip acc">${esc(b.主題||'')}</span><span class="chip">#${b.id}</span></summary>
-      <div class="icards">${(b.貼紙||[]).map(x=>`<div class="icard">${thumb(d.圖片,x.圖,x.品質,x.名稱).replace('class="thm','class="thm big')}<div class="txt"><div class="nm">${esc(x.名稱)}</div><div class="ds">#${x.id}</div></div></div>`).join('')}</div>
-      ${tableFromObjs((b.獎勵||[]).map(r=>({集滿張數:r.集滿張數,獎勵:r.獎勵,備註:r.備註||''})))}</details>`;
+    h+=`<a class="hubcard" data-k="${esc([b.名稱,names,rw].join(' ').toLowerCase())}" href="#sa_${b.id}">
+      <div class="t"><span style="display:flex;align-items:center;gap:8px">${thumb(cov,b.圖,'',b.名稱)}${esc(b.名稱)}</span><span class="chip">#${b.id}</span></div>
+      <div class="d">${(b.貼紙||[]).length} 張貼紙${rw?' · '+esc(rw.slice(0,60))+(rw.length>60?'…':''):''}</div></a>`;
   }
-  h+=`</section><ul class="notes">${(d.備註||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`;
+  return h+`</div></section>`;
+}
+
+async function renderStickerAlbum(id){
+  const d=await codex('貼紙集換');
+  const b=d.畫冊.find(x=>String(x.id)===String(id));
+  if(!b) return `<div class="empty">找不到畫冊 #${esc(id)}</div>`;
+  PAGE_TITLE=b.名稱+' · 貼紙集換';
+  let h=`<div class="hdr">${thumb(stCover(d),b.圖,'',b.名稱)}<h2>${esc(b.名稱)}</h2><span class="chip acc">${esc(b.主題||'')}</span><span class="chip">#${b.id}</span></div>`;
+  h+=stBack('#st_'+encodeURIComponent(b.主題||''),b.主題||'回主題');
+  h+=`<section><h3>貼紙 <small>${(b.貼紙||[]).length} 張</small></h3><div class="icards">`;
+  h+=(b.貼紙||[]).map(x=>`<div class="icard">${thumb(d.圖片,x.圖,x.品質,x.名稱).replace('class="thm','class="thm big')}<div class="txt"><div class="nm">${esc(x.名稱)}</div><div class="ds">#${x.id}</div></div></div>`).join('');
+  h+=`</div></section><section><h3>集滿獎勵</h3>${tableFromObjs((b.獎勵||[]).map(r=>({集滿張數:r.集滿張數,獎勵:r.獎勵,備註:r.備註||''})))}</section>`;
   return h;
 }
 
@@ -551,8 +589,9 @@ async function renderItems(){
   return h+`</tbody></table></section>`;
 }
 
+var PAGE_TITLE='';              // 渲染函式可以覆寫頁籤標題(主題/畫冊這種動態頁用)
 async function show(id){
-  const v=$('#view'); v.innerHTML='<div class="empty">載入中…</div>';
+  const v=$('#view'); v.innerHTML='<div class="empty">載入中…</div>'; PAGE_TITLE='';
   document.querySelectorAll('.nav a').forEach(a=>a.classList.toggle('active',a.dataset.id===id));
   $('#side').classList.remove('open');
   try{
@@ -568,12 +607,14 @@ async function show(id){
     else if(id==='car') v.innerHTML=await renderCar();
     else if(id==='equip') v.innerHTML=await renderEquip();
     else if(id==='sticker') v.innerHTML=await renderSticker();
+    else if(id.startsWith('st_')) v.innerHTML=await renderStickerTheme(decodeURIComponent(id.slice(3)));
+    else if(id.startsWith('sa_')) v.innerHTML=await renderStickerAlbum(id.slice(3));
     else if(id.startsWith('g_')) v.innerHTML=await renderGrowth(id.slice(2));
     else if(id==='itemdex') v.innerHTML=await renderItemCodex();
     else if(id==='item') v.innerHTML=await renderItems();
     else if(id==='doc') v.innerHTML=`<div class="hdr"><h2>欄位說明</h2></div>`+md(await fetchT(ROOT+'欄位說明.md'));
     else { const a=await fetchJ(ROOT+id+'/活動.json'); v.innerHTML=renderActivity(a,id); }
-    document.title=(id.startsWith('cx_')?decodeURIComponent(id.slice(3)):(INDEX.find(x=>x.資料夾===id)?.名稱||SPECIAL.find(s=>s.id===id)?.name||id))+' · 巡夢少女 活動表格';
+    document.title=(PAGE_TITLE||(id.startsWith('cx_')?decodeURIComponent(id.slice(3)):(INDEX.find(x=>x.資料夾===id)?.名稱||SPECIAL.find(s=>s.id===id)?.name||id)))+' · 巡夢少女 活動表格';
   }catch(e){v.innerHTML=`<div class="empty">載入失敗:${esc(e.message)}</div>`;}
   window.scrollTo(0,0);
 }
