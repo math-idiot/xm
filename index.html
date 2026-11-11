@@ -49,13 +49,13 @@ aside input:focus{outline:2px solid var(--ring);outline-offset:1px}
 .nav a.active{background:var(--fg);color:var(--bg)}
 .nav a small{color:var(--muted);font-size:12px}
 .nav a.active small{color:var(--bg);opacity:.75}
-main{padding:24px 32px 64px;max-width:1300px;min-width:0}
+main{padding:24px 32px 64px;max-width:1500px;min-width:0;margin-inline:auto;width:100%}
 .hdr{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px 16px;margin-bottom:6px}
 .hdr h2{font-size:26px;margin:0}
 .chip{display:inline-block;padding:2px 10px;border:1px solid var(--border);border-radius:999px;font-size:12.5px;color:var(--muted);background:var(--muted-bg)}
 .chip.acc{border-color:var(--accent);color:var(--accent);background:var(--accent-bg)}
 .sub{color:var(--muted);font-size:13px;margin-bottom:18px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin:14px 0 20px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr));gap:10px;margin:14px 0 20px}
 .thm{display:inline-flex;width:38px;height:38px;flex:0 0 38px;align-items:center;justify-content:center;
   background-size:100% 100%;background-repeat:no-repeat;vertical-align:middle;border-radius:6px}
 .thm.noframe{border:1px solid var(--border);background:var(--muted-bg)}
@@ -63,23 +63,24 @@ main{padding:24px 32px 64px;max-width:1300px;min-width:0}
 .thm.big{width:56px;height:56px;flex:0 0 56px}
 details>summary{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 details>summary>b{margin-right:2px}
-.stand.full{max-height:420px}
-table.kv{border-collapse:collapse;width:100%;margin:2px 0}
-table.kv>tbody>tr>th{text-align:left;vertical-align:top;white-space:nowrap;padding:2px 10px 2px 0;
+.stand.full{max-height:clamp(220px,38vw,420px)}
+table.kv{border-collapse:collapse;width:100%;margin:2px 0;table-layout:fixed}
+table.kv>tbody>tr>td{word-break:break-word;overflow-wrap:anywhere}
+table.kv>tbody>tr>th{text-align:left;vertical-align:top;width:min(34%,190px);padding:2px 10px 2px 0;
   color:var(--muted);font-weight:500;font-size:13px;border-bottom:1px solid var(--border)}
 table.kv>tbody>tr>td{padding:2px 0;border-bottom:1px solid var(--border);font-size:13px}
 ol.kvlist{margin:2px 0;padding-left:20px}
 ol.kvlist>li{margin:4px 0}
 .suitpic{height:56px;width:auto;border-radius:6px;vertical-align:middle;margin-right:8px}
-.stand{float:right;max-height:260px;margin:0 0 8px 14px;border-radius:8px}
-@media(max-width:600px){.stand{float:none;display:block;margin:0 auto 10px;max-height:220px}}
-.hub{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin:14px 0}
+.stand{float:right;max-height:clamp(180px,26vw,260px);max-width:42%;margin:0 0 8px 14px;border-radius:8px}
+@media(max-width:900px){.stand,.stand.full{float:none;display:block;margin:0 auto 10px;max-width:100%;max-height:min(50vh,360px)}}
+.hub{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px;margin:14px 0}
 .hubcard{display:block;border:1px solid var(--border);border-radius:10px;padding:14px 16px;background:var(--card);
   text-decoration:none;color:var(--fg)}
 .hubcard:hover{border-color:var(--accent);background:var(--accent-bg)}
 .hubcard .t{font-weight:600;font-size:16px;display:flex;justify-content:space-between;align-items:center;gap:8px}
 .hubcard .d{color:var(--muted);font-size:13px;margin-top:6px}
-.icards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin:12px 0 20px}
+.icards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:10px;margin:12px 0 20px}
 .icard{display:flex;gap:10px;border:1px solid var(--border);border-radius:8px;padding:10px;background:var(--card)}
 /* 品質框用遊戲原圖(從 commonqualitynew atlas 切出),道具圖疊在上面 */
 .icard .pic{position:relative;flex:0 0 64px;width:64px;height:64px;display:flex;align-items:center;justify-content:center;
@@ -100,6 +101,7 @@ ol.kvlist>li{margin:4px 0}
 section{margin:26px 0}
 section>h3{font-size:15px;margin:0 0 8px;padding-bottom:6px;border-bottom:2px solid var(--fg);display:flex;justify-content:space-between;align-items:baseline}
 section>h3 small{font-weight:400;color:var(--muted);font-size:12.5px}
+.tw{overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch}
 table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
 th,td{border-bottom:1px solid var(--border);padding:6px 10px;text-align:left;vertical-align:top}
 th{font-size:12px;color:var(--muted);font-weight:600;background:var(--muted-bg);position:sticky;top:0}
@@ -129,6 +131,10 @@ section>details[open]>summary{margin-bottom:8px;padding-bottom:8px;border-bottom
 .empty{color:var(--muted);padding:24px;text-align:center;border:1px dashed var(--border);border-radius:8px}
 .menu-btn{display:none}
 body.print .app{grid-template-columns:1fr}body.print #side,body.print .menu-btn{display:none}body.print #main{max-width:1100px;margin:0 auto;padding:24px 32px}
+@media (max-width:1150px){
+  .app{grid-template-columns:220px 1fr}
+  main{padding:20px 20px 56px}
+}
 @media (max-width:800px){
   .app{grid-template-columns:1fr}
   aside{position:fixed;left:0;top:0;width:min(85vw,300px);z-index:10;transform:translateX(-100%);transition:transform .2s}
@@ -256,7 +262,8 @@ function renderActivity(a,folder){
 function tableFromObjs(rows){
   if(!rows?.length) return '<div class="empty">無資料</div>';
   const cols=[...new Set(rows.flatMap(r=>Object.keys(r)))];
-  return `<table><thead><tr>${cols.map(c=>`<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${cols.map(c=>`<td>${typeof r[c]==='object'&&r[c]!==null?esc(JSON.stringify(r[c])):esc(r[c])}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+  // 包一層可橫向捲動的容器:養成那些表格欄位很多,不包的話會把整頁撐寬
+  return `<div class="tw"><table><thead><tr>${cols.map(c=>`<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${cols.map(c=>`<td>${typeof r[c]==='object'&&r[c]!==null?esc(JSON.stringify(r[c])):esc(r[c])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
 }
 
 async function renderOverview(){
