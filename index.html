@@ -342,17 +342,17 @@ async function renderDress(){
   let h=`<div class="hdr"><h2>時裝圖鑑</h2><span class="chip">${d.套裝數} 套</span><span class="chip">${d.單品數} 件</span></div><p class="sub">${esc(d.說明)}</p>`;
   h+=`<section>${searchBox('搜尋套裝 / 單品名 / 品牌…')} <span class="codex-count sub"></span>`;
   for(const s of d.套裝){
-    const k=[s.套裝名,s.品質,s.品牌,...(s.單品||[]).map(p=>p.名稱)].join(' ').toLowerCase();
+    const k=[s.套裝名,s.品質,s.品牌,...(s.獲取||[]),...(s.單品||[]).map(p=>p.名稱)].join(' ').toLowerCase();
     const tpl=s.升星範本?T[s.升星範本]:null;
     h+=`<details data-k="${esc(k)}"><summary>${thumb(d.圖片,s.圖,s.品質,s.套裝名)}<b>${esc(s.套裝名)}</b><span class="chip">${s.件數} 件</span>${s.品牌?`<span class="chip">${esc(s.品牌)}</span>`:''}${tpl?`<span class="chip">最高 ${tpl.最高星} 星</span>`:''}</summary>
       ${s.介紹?`<p class="sub">${esc(s.介紹)}</p>`:''}
-      ${s.套裝加成?`<div class="grid">${kv('穿齊套裝加成',esc(s.套裝加成))}</div>`:''}
+      ${s.套裝加成||s.獲取?`<div class="grid">${s.套裝加成?kv('穿齊套裝加成',esc(s.套裝加成)):''}${s.獲取?kv('獲取',s.獲取.map(x=>`<span class="tag">${esc(x)}</span>`).join('')):''}</div>`:''}
       <h4 style="margin:12px 0 6px">單品 <small>五個風格標籤分數 + 自己的屬性加成</small></h4>
-      ${tableFromObjs((s.單品||[]).map(p=>({部位:p.部位,名稱:p.名稱,品質:p.品質,...(p.標籤分數||{}),屬性加成:p.屬性加成||'—'})))}
+      ${tableFromObjs((s.單品||[]).map(p=>({部位:p.部位,名稱:p.名稱,品質:p.品質,...(p.標籤分數||{}),屬性加成:p.屬性加成||'—',獲取:(p.獲取||[]).join('、')||'—'})))}
       ${tpl?`<details style="margin-top:10px" data-tpl="${esc(s.升星範本)}" ontoggle="fillTpl(this)"><summary class="sub">升星 / 突破表(${tpl.節點數} 階)</summary><div class="tpl-body"><div class="empty">展開中…</div></div></details>`:''}
       </details>`;
   }
-  if(d.未歸套的單品?.length) h+=`<h4 style="margin:14px 0 6px">未歸套的單品</h4>${tableFromObjs(d.未歸套的單品.map(p=>({名稱:p.名稱,部位:p.部位,品質:p.品質,屬性加成:p.屬性加成||'—'})))}`;
+  if(d.未歸套的單品?.length) h+=`<h4 style="margin:14px 0 6px">未歸套的單品</h4>${tableFromObjs(d.未歸套的單品.map(p=>({名稱:p.名稱,部位:p.部位,品質:p.品質,屬性加成:p.屬性加成||'—',獲取:(p.獲取||[]).join('、')||'—'})))}`;
   return h+`</section>`;
 }
 
