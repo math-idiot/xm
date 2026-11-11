@@ -163,6 +163,10 @@ const CODEX_PAGES=[{id:'partner',name:'夥伴'},{id:'pet',name:'寵物'},{id:'gu
   {id:'itemdex',name:'道具'},{id:'equip',name:'裝備'},{id:'ability',name:'能力(學習)'}];
 const GROWTH_PAGES=[{id:'cult',name:'夥伴'},{id:'g_寵物',name:'寵物'},{id:'g_時裝',name:'時裝'},
   {id:'g_珍寶',name:'珍寶'},{id:'g_珍藏',name:'珍藏'},{id:'g_坐騎',name:'坐騎'},{id:'g_裝備',name:'裝備'}];
+// 側欄的圖鑑順序直接照「養成」那七類推出來,兩邊才不會各自漂走;
+// 沒有對應養成的(貼紙集換/道具/能力)接在後面
+const CODEX_NAV=[...GROWTH_PAGES.map(g=>CODEX_PAGES.find(c=>c.name===g.name)).filter(Boolean),
+  ...CODEX_PAGES.filter(c=>!GROWTH_PAGES.some(g=>g.name===c.name))];
 const SPECIAL=[{id:'overview',name:'總覽與規則'},...CODEX_PAGES,...GROWTH_PAGES,{id:'item',name:'道具查詢'},{id:'doc',name:'欄位說明'}];
 
 const yn=v=>v===null||v===undefined?'<span class="nul">null</span>':v===true?'<span class="ok">有</span>':v===false?'<span class="no">無</span>':esc(v);
@@ -584,11 +588,7 @@ function buildNav(filter=''){
     <summary>${title}${n!=null?`<small>${n}</small>`:''}</summary>${body}</details>`;
   const acts=INDEX.filter(a=>!f||(a.名稱+a.資料夾+(a.分類||'')+(a.類型||'')).toLowerCase().includes(f));
   let h=sec('act','活動',acts.map(a=>`<a href="#${encodeURIComponent(a.資料夾)}" data-id="${esc(a.資料夾)}"><span>${esc(a.名稱)}</span><small>${esc(a.分類||'')}</small></a>`).join(''),acts.length);
-  // 沒搜尋時只列三個分類;一搜尋就直接列出符合的頁,免得還要先點分類
-  const codex=f
-    ? CODEX_DIR.flatMap(g=>g.頁面).filter(p=>p.名稱.toLowerCase().includes(f)).map(p=>link({id:p.id,name:p.名稱})).join('')
-    : CODEX_DIR.map(g=>`<a href="#cx_${encodeURIComponent(g.分類)}" data-id="cx_${esc(g.分類)}"><span>${esc(g.分類)}</span><small>${g.頁面.length}</small></a>`).join('');
-  h+=sec('codex','圖鑑',codex);
+  h+=sec('codex','圖鑑',CODEX_NAV.filter(keep).map(link).join(''));
   h+=sec('growth','養成',GROWTH_PAGES.filter(keep).map(link).join(''));
   h+=sec('other','其他',[{id:'overview',name:'總覽與規則'},{id:'item',name:'道具查詢(純表格)'},{id:'doc',name:'欄位說明'}].filter(keep).map(link).join(''));
   $('#nav').innerHTML=h;
