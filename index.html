@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>巡夢少女 活動表格</title>
-<meta name="description" content="巡夢少女 活動獎勵與養成參考:各活動階段獎勵、排行獎勵、突破 / 覺醒 / 心途 / 升級 / 裝備共鳴">
+<meta name="description" content="巡夢少女 活動獎勵與養成參考:各活動階段獎勵、排行獎勵、圖鑑與養成數據">
 <meta property="og:type" content="website">
 <meta property="og:title" content="巡夢少女 活動表格">
-<meta property="og:description" content="活動獎勵與養成參考:各活動階段獎勵、排行獎勵、突破 / 覺醒 / 心途 / 升級 / 裝備共鳴">
+<meta property="og:description" content="活動獎勵與養成參考:各活動階段獎勵、排行獎勵、圖鑑與養成數據">
 <meta property="og:image" content="https://math-idiot.github.io/xm/preview.png">
 <meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
 <meta property="og:url" content="https://math-idiot.github.io/xm/">
@@ -214,8 +214,8 @@ function stageTable(stages,extraCols=[]){
 }
 async function renderCult(){
   const base=ROOT+'99_養成參考/';
-  const [tp,jx,xt,sj,zb]=await Promise.all(['突破','覺醒','心途','升級','裝備共鳴'].map(n=>fetchJ(base+n+'.json')));
-  let h=`<div class="hdr"><h2>養成參考</h2><span class="chip">非活動</span></div><p class="sub">突破 / 覺醒 / 心途 / 升級 / 裝備共鳴;每階素材後面是從 1 階累加到該階的已用量。數值取自遊戲設定表</p>`;
+  const [tp,jx,xt,sj]=await Promise.all(['突破','覺醒','心途','升級'].map(n=>fetchJ(base+n+'.json')));
+  let h=`<div class="hdr"><h2>養成參考</h2><span class="chip">非活動</span></div><p class="sub">突破 / 覺醒 / 心途 / 升級;每階素材後面是從 1 階累加到該階的已用量。數值取自遊戲設定表。裝備共鳴在「裝備養成」那頁</p>`;
   h+=`<section><h3>突破 <small>${esc(tp.說明)}</small></h3>`;
   for(const [r,b] of Object.entries(tp.稀有度)){
     h+=`<h4 style="margin:14px 0 6px">${r} <span class="chip">突破上限 ${yn(b.突破上限)}</span> <span class="chip">覺醒 ${yn(b.覺醒)}</span> <span class="chip">心途 ${yn(b.心途)}</span> <span class="chip">升級被動 ${yn(b.升級被動)}</span></h4>`;
@@ -230,7 +230,7 @@ async function renderCult(){
   if(xt.UR差異?.length) h+=`<h4 style="margin:14px 0 6px">UR 差異 <small>這幾階 UR 比 SSR 貴</small></h4>${tableFromObjs(xt.UR差異.map(d=>({階:d.等級,SSR:Object.entries(d.SSR).map(([k,v])=>k+v).join('、'),UR:Object.entries(d.UR).map(([k,v])=>k+v).join('、')})))}`;
   h+=`<ul class="notes">${(xt.備註||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`;
   h+=`<h4 style="margin:14px 0 6px">心途共鳴</h4><p class="sub">${esc(xt.心途共鳴.說明)}</p>${tableFromObjs((xt.心途共鳴.階段||[]).map(x=>({共鳴等級:x.共鳴等級,需求:x.需求,達成後總效果:x.達成後總效果??x.效果原文,'遊戲內預覽':x.遊戲內預覽??''})))}<ul class="notes">${(xt.心途共鳴.備註||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul></section>`;
-  h+=`<section><h3>升級</h3>${stageTable(sj.關卡||[])}<ul class="notes">${(sj.備註||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul></section><section><h3>裝備共鳴 <small>${esc(zb.說明||'')}</small></h3>${tableFromObjs((zb.階段||[]).map(x=>({共鳴等級:x.共鳴等級,需求:x.需求??'待確認',攻擊:x.效果?.攻擊,防禦:x.效果?.防禦,氣勢:x.效果?.氣勢})))}<ul class="notes">${(zb.備註||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul></section>`;
+  h+=`<section><h3>升級</h3>${stageTable(sj.關卡||[])}<ul class="notes">${(sj.備註||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul></section>`;
   return h;
 }
 function md(t){ // tiny markdown: headings, tables, lists, code, paragraphs
