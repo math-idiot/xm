@@ -375,6 +375,7 @@ async function renderPets(){
   for(const p of d.寵物){
     const k=[p.名稱,p.定位,...(p.品質||[]).flatMap(q=>[...(q.獲取||[]),...(q.技能||[]).map(s=>s.名稱||'')])].join(' ').toLowerCase();
     h+=`<details data-k="${esc(k)}"><summary>${thumb(d.圖片,p.圖,(p.品質.slice(-1)[0]||{}).稀有度,p.名稱)}<b>${esc(p.名稱)}</b>${p.定位?`<span class="chip acc">${esc(p.定位)}</span>`:''}${p.變異?'<span class="chip">變異</span>':''}<span class="chip">${p.品質.map(q=>q.稀有度).join(' / ')}</span></summary>
+      ${p.立繪?`<img class="stand full" src="${enc('圖片/'+(d.立繪圖片||{}).資料夾+'/'+p.立繪)}?v=${(d.立繪圖片||{}).版本||''}" alt="${esc(p.名稱)}" loading="lazy">`:''}
       ${p.說明?`<p class="sub">${esc(p.說明)}</p>`:''}
       ${tableFromObjs(p.品質.map(q=>({稀有度:q.稀有度,資質:q.資質||'—',資質條數:q.資質條數??'—',
         技能:(q.技能||[]).map(s=>s.名稱||s.id).join('、'),
@@ -444,6 +445,7 @@ async function renderCar(){
   h+=`<section>${searchBox('搜尋坐騎…')} <span class="codex-count sub"></span>`;
   for(const c of d.坐騎){
     h+=`<details data-k="${esc([c.名稱,c.品質,c.說明||'',c.取得方式||'',gwText(c.獲取)].join(' ').toLowerCase())}"><summary>${thumb(d.圖片,c.圖,c.品質,c.名稱)}<b>${esc(c.名稱)}</b>${c.限定?'<span class="chip">限定</span>':''}${c.啟動屬性?`<span class="chip">${esc(c.啟動屬性)}</span>`:''}</summary>
+      ${c.立繪?`<img class="stand full" src="${enc('圖片/'+(d.立繪圖片||{}).資料夾+'/'+c.立繪)}?v=${(d.立繪圖片||{}).版本||''}" alt="${esc(c.名稱)}" loading="lazy">`:''}
       ${c.說明?`<p class="sub">${esc(c.說明)}</p>`:''}
       <div class="grid">${kv('啟動屬性',esc(c.啟動屬性||'—'))}${kv('取得方式',esc(c.取得方式||'—'))}${kv('戰鬥技能',esc(c.戰鬥技能?.名稱||'—'))}${c.獲取?kv('可前往',gw(c.獲取)):''}</div>
       ${c.坐騎技能?.length?tableFromObjs(c.坐騎技能.map(s=>({技能:s.名稱,說明:s.說明||''}))):''}</details>`;
