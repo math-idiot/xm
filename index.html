@@ -64,6 +64,7 @@ main{padding:24px 32px 64px;max-width:1300px;min-width:0}
 details>summary{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 details>summary>b{margin-right:2px}
 .stand.full{max-height:420px}
+.suitpic{height:56px;width:auto;border-radius:6px;vertical-align:middle;margin-right:8px}
 .stand{float:right;max-height:260px;margin:0 0 8px 14px;border-radius:8px}
 @media(max-width:600px){.stand{float:none;display:block;margin:0 auto 10px;max-height:220px}}
 .hub{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin:14px 0}
@@ -354,7 +355,8 @@ async function renderDress(){
   for(const s of d.套裝){
     const k=[s.套裝名,s.品質,s.品牌,...(s.獲取||[]),...(s.單品||[]).map(p=>p.名稱)].join(' ').toLowerCase();
     const tpl=s.升星範本?T[s.升星範本]:null;
-    h+=`<details data-k="${esc(k)}"><summary>${thumb(d.圖片,s.圖,s.品質,s.套裝名)}<b>${esc(s.套裝名)}</b><span class="chip">${s.件數} 件</span>${s.品牌?`<span class="chip">${esc(s.品牌)}</span>`:''}${tpl?`<span class="chip">最高 ${tpl.最高星} 星</span>`:''}</summary>
+    const cover=s.套裝圖?`<img class="suitpic" src="${enc('圖片/'+(d.套裝圖片||{}).資料夾+'/'+s.套裝圖)}?v=${(d.套裝圖片||{}).版本||''}" alt="${esc(s.套裝名)}" loading="lazy">`:thumb(d.圖片,s.圖,s.品質,s.套裝名);
+    h+=`<details data-k="${esc(k)}"><summary>${cover}<b>${esc(s.套裝名)}</b><span class="chip">${s.件數} 件</span>${s.品牌?`<span class="chip">${esc(s.品牌)}</span>`:''}${tpl?`<span class="chip">最高 ${tpl.最高星} 星</span>`:''}</summary>
       ${s.介紹?`<p class="sub">${esc(s.介紹)}</p>`:''}
       ${s.套裝加成||s.獲取?`<div class="grid">${s.套裝加成?kv('穿齊套裝加成',esc(s.套裝加成)):''}${s.獲取?kv('獲取',s.獲取.map(x=>`<span class="tag">${esc(x)}</span>`).join('')):''}</div>`:''}
       <h4 style="margin:12px 0 6px">單品 <small>五個風格標籤分數 + 自己的屬性加成</small></h4>
