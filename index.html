@@ -112,7 +112,7 @@ const ROOT='整理/';
 let INDEX=[];
 const CODEX_PAGES=[{id:'partner',name:'夥伴圖鑑'},{id:'pet',name:'寵物圖鑑'},{id:'dress',name:'時裝圖鑑'},
   {id:'guardian',name:'珍寶圖鑑'},{id:'collect',name:'珍藏圖鑑'},{id:'car',name:'坐騎圖鑑'},{id:'equip',name:'裝備圖鑑'},
-  {id:'ability',name:'能力(學習)'},{id:'item',name:'道具查詢'}];
+  {id:'ability',name:'能力(學習)'},{id:'sticker',name:'貼紙集換'},{id:'item',name:'道具查詢'}];
 const GROWTH_PAGES=[{id:'cult',name:'夥伴養成'},{id:'g_寵物',name:'寵物養成'},{id:'g_時裝',name:'時裝養成'},
   {id:'g_珍寶',name:'珍寶養成'},{id:'g_珍藏',name:'珍藏養成'},{id:'g_坐騎',name:'坐騎養成'},{id:'g_裝備',name:'裝備養成'}];
 const SPECIAL=[{id:'overview',name:'總覽與規則'},...CODEX_PAGES,...GROWTH_PAGES,{id:'doc',name:'欄位說明'}];
@@ -385,6 +385,26 @@ async function renderCar(){
   return h+`</section>`;
 }
 
+async function renderSticker(){
+  const d=await codex('貼紙集換');
+  let h=`<div class="hdr"><h2>貼紙集換</h2><span class="chip">${d.數量} 本畫冊</span><span class="chip">${d.主題.length} 個主題</span></div><p class="sub">${esc(d.說明)}</p>`;
+  const p=d.抽貼紙||{};
+  h+=`<section><h3>抽貼紙</h3><div class="grid">${kv('抽一次',esc(p.抽一次的消耗||'—'))}</div>
+    ${tableFromObjs(p.品質庫||[])}
+    <details style="margin-top:8px"><summary class="sub">抽到重複的機率(依該庫收集進度)</summary>${tableFromObjs(p.重複機率||[])}</details>
+    <h3 style="margin-top:14px">貼紙商店套裝折扣</h3>${tableFromObjs(p.貼紙商店套裝折扣||[])}</section>`;
+  h+=`<section><h3>畫冊</h3>${searchBox('搜尋畫冊 / 主題 / 貼紙名 / 獎勵…')} <span class="codex-count sub"></span>`;
+  for(const b of d.畫冊){
+    const names=(b.貼紙||[]).map(x=>x.名稱).join('、');
+    const rw=(b.獎勵||[]).map(r=>`集${r.集滿張數}張→${r.獎勵}`).join(' / ');
+    h+=`<details data-k="${esc([b.名稱,b.主題||'',names,rw].join(' ').toLowerCase())}"><summary><b>${esc(b.名稱)}</b> <span class="chip acc">${esc(b.主題||'')}</span><span class="chip">#${b.id}</span></summary>
+      ${tableFromObjs((b.貼紙||[]).map(x=>({編號:x.id,貼紙:x.名稱,品質:x.品質||'—'})))}
+      ${tableFromObjs((b.獎勵||[]).map(r=>({集滿張數:r.集滿張數,獎勵:r.獎勵,備註:r.備註||''})))}</details>`;
+  }
+  h+=`</section><ul class="notes">${(d.備註||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`;
+  return h;
+}
+
 async function renderEquip(){
   const d=await codex('裝備');
   let h=`<div class="hdr"><h2>裝備圖鑑</h2><span class="chip">${d.數量} 件</span></div><p class="sub">${esc(d.說明)}</p>`;
@@ -449,6 +469,7 @@ async function show(id){
     else if(id==='collect') v.innerHTML=await renderCollect();
     else if(id==='car') v.innerHTML=await renderCar();
     else if(id==='equip') v.innerHTML=await renderEquip();
+    else if(id==='sticker') v.innerHTML=await renderSticker();
     else if(id.startsWith('g_')) v.innerHTML=await renderGrowth(id.slice(2));
     else if(id==='item') v.innerHTML=await renderItems();
     else if(id==='doc') v.innerHTML=`<div class="hdr"><h2>欄位說明</h2></div>`+md(await fetchT(ROOT+'欄位說明.md'));
