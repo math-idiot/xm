@@ -340,6 +340,7 @@ async function renderPartners(){
         ${kv('星座',esc(p.星座||'—'))}${kv('生日',esc(p.生日||'—'))}${kv('血型',esc(p.血型||'—'))}${kv('年齡',esc(p.年齡||'—'))}
         ${p.獲取?kv('獲取',gw(p.獲取)):''}</div>
       ${p.技能?.length?`<h4 style="margin:12px 0 6px">技能</h4>${tableFromObjs(p.技能.map(s=>({名稱:s.名稱,類型:s.類型,解鎖:s.解鎖階?`突破${s.解鎖階}階`:'初始',說明:s.說明})))}`:''}
+      ${p.好感獎勵?.length?`<h4 style="margin:12px 0 6px">好感獎勵 <small>累積到該好感度時領一次</small></h4>${tableFromObjs(p.好感獎勵.map(r=>({好感度:r.好感度,等級:r.等級??'—',獎勵:r.獎勵||'—',語音:r.語音||''})))}`:''}
       ${p.介紹?`<h4 style="margin:12px 0 6px">介紹</h4><p class="sub" style="white-space:pre-wrap">${esc(p.介紹)}</p>`:''}</details>`;
   }
   return h+`</section>`;
