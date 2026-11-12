@@ -72,8 +72,33 @@ table.kv>tbody>tr>td{padding:2px 0;border-bottom:1px solid var(--border);font-si
 ol.kvlist{margin:2px 0;padding-left:20px}
 ol.kvlist>li{margin:4px 0}
 .suitpic{height:56px;width:auto;border-radius:6px;vertical-align:middle;margin-right:8px}
+/* 時裝封面:立繪坐在品質框上,跟其他圖鑑一致 */
+/* 招募:卡池自己的橫幅(520×240)與標題(460×228) */
+/* 標題圖的原始尺寸不一致(典藏邀約是 320×120,其他是 460×228),只鎖高度的話
+   窄的那張字會顯得特別大。寬高都鎖,讓每張看起來一樣大。 */
+.fbanner{width:100%;display:block;border-radius:10px 10px 0 0}
+.fbansm{height:38px;border-radius:6px;margin-right:10px;vertical-align:middle}
+.rtitle{height:34px;max-width:110px;object-fit:contain;margin-right:10px;vertical-align:middle}
+/* 玩法那排每一列都要有圖:沒有自己的橫幅就放功能圖示,不要留一排純文字 */
+.ficon{width:30px;height:30px;object-fit:contain;margin-right:10px;vertical-align:middle;
+  border-radius:7px;background:var(--chip);padding:2px;box-sizing:content-box}
+.atitle{height:40px;max-width:190px;object-fit:contain;margin-right:10px;vertical-align:middle}
+.atitlebig{max-width:300px;max-height:96px;object-fit:contain;display:block;margin:4px 0 10px}
+.rbanner{max-width:min(100%,460px);border-radius:10px;display:inline-block}  /* 有角色,放大看 */
+.suitcover{display:inline-flex;width:52px;height:52px;flex:0 0 52px;align-items:center;justify-content:center;
+           background-size:contain;background-repeat:no-repeat;background-position:center;border-radius:8px}
+.suitcover.noframe{border:1px solid var(--border);background:var(--muted-bg)}
+.suitcover .suitpic{max-width:86%;max-height:86%;object-fit:contain;border-radius:4px}
 .stand{float:right;max-height:clamp(180px,26vw,260px);max-width:42%;margin:0 0 8px 14px;border-radius:8px}
+/* 立繪是 float:right,<details> 預設不會包住浮動元素 —— 圖會長到卡片外面,
+   一次展開好幾個就全部疊在一起。清除浮動讓卡片自己長高。 */
+details{display:flow-root}
+details::after{content:"";display:block;clear:both}
 @media(max-width:900px){.stand,.stand.full{float:none;display:block;margin:0 auto 10px;max-width:100%;max-height:min(50vh,360px)}}
+/* 活動排程的時間條:看得出哪些是全程、哪些只開中間幾天 */
+.bar{position:relative;height:12px;border-radius:6px;background:var(--muted-bg)}
+.bar span{position:absolute;top:0;height:12px;border-radius:6px;background:var(--accent)}
+.nav-home{display:block;padding:7px 10px;margin:0 0 6px;border-radius:6px;font-weight:500}
 .hub{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px;margin:14px 0}
 .hubcard{display:block;border:1px solid var(--border);border-radius:10px;padding:14px 16px;background:var(--card);
   text-decoration:none;color:var(--fg)}
@@ -89,10 +114,23 @@ ol.kvlist>li{margin:4px 0}
 .deco .pic{height:110px;display:flex;align-items:center;justify-content:center;gap:6px;padding:8px;
            background:var(--muted-bg);position:relative}
 .deco.wide .pic{height:130px}
+/* 一筆有好幾張圖的(預設聊天氣泡是左右兩張)不要並排擠在同一格 ——
+   橫著放兩張各自只剩一半寬,就會被裁掉。改成直立排,每張都佔滿寬度。 */
+.deco .pic.multi{flex-direction:column;height:auto;min-height:110px;gap:8px}
+.deco.wide .pic.multi{min-height:130px}
+.deco .pic.multi img{max-height:72px;width:auto}
 .deco .pic img{max-width:100%;max-height:100%;object-fit:contain}
 .deco .pic .none{font-size:12px;color:var(--sub)}
 /* 品質用遊戲自己的品質框表示,不寫字。方形的(頭像/宮牌/貼圖)就讓圖坐在框上,
    長條的(聊天氣泡/稱號)放不下,改在角落擺一小塊同一張框 */
+/* 資源表格:圖套在品質框上,維持原來 28px 的行高,不要用圖鑑那個 38px 的 .thm */
+/* 名字要跟圖排成一列 —— 用 inline 元素的話名字會繞著圖折行(「主角經驗」斷成「主/角經驗」) */
+.rescell{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.rescell b{white-space:nowrap}
+.respic{display:flex;width:34px;height:34px;flex:0 0 34px;
+        align-items:center;justify-content:center;
+        background-size:contain;background-repeat:no-repeat;background-position:center}
+.respic img{max-width:76%;max-height:76%;display:block}
 .deco .plate{width:94px;height:94px;display:flex;align-items:center;justify-content:center;
              background-size:contain;background-repeat:no-repeat;background-position:center}
 .deco .plate img{max-width:76%;max-height:76%}
@@ -138,6 +176,8 @@ th{font-size:12px;color:var(--muted);font-weight:600;background:var(--muted-bg);
 td.num,th.num{text-align:right}
 tr:hover td{background:var(--muted-bg)}
 tr.total td{font-weight:700;border-top:2px solid var(--fg)}
+/* 分不出來的標成另一個顏色,不要跟確定的混在一起看起來一樣可信 */
+.tag.amb{background:var(--muted-bg);color:var(--sub);border:1px dashed var(--border)}
 .tag{display:inline-block;padding:1px 7px;border-radius:4px;font-size:12px;background:var(--accent-bg);color:var(--accent);margin:1px 4px 1px 0;white-space:nowrap}
 ul.notes{margin:4px 0;padding-left:20px;color:var(--muted);font-size:13.5px}
 .imgs{display:flex;flex-wrap:wrap;gap:10px}
@@ -206,10 +246,10 @@ const ROOT='網頁資料/';   // 網頁只讀這裡(由 工具/打包素材.py �
 var INDEX=[];              // var:讓冒煙測試能注入
 // 圖鑑分三類,側欄只放分類,點進去才列底下的頁(內容讀 整理/90_圖鑑/目錄.json)
 var CODEX_DIR=[];                       // [{分類,說明,頁面:[{id,名稱,說明,數量,單位}]}]
-const CODEX_PAGES=[{id:'partner',name:'夥伴'},{id:'pet',name:'寵物'},{id:'guardian',name:'珍寶'},
+const CODEX_PAGES=[{id:'partner',name:'夥伴'},{id:'hero',name:'主角'},{id:'pet',name:'寵物'},{id:'guardian',name:'珍寶'},
   {id:'dress',name:'時裝'},{id:'car',name:'坐騎'},{id:'collect',name:'珍藏'},{id:'sticker',name:'貼紙集換'},
   {id:'itemdex',name:'道具'},{id:'equip',name:'裝備'},{id:'ability',name:'能力(學習)'},
-  {id:'res',name:'資源'},{id:'deco',name:'飾框'},{id:'face',name:'貼圖'},
+  {id:'res',name:'資源'},{id:'nightmare',name:'夢魘'},{id:'deco',name:'飾框'},{id:'face',name:'貼圖'},
   {id:'emo',name:'表情符號'}];
 const GROWTH_PAGES=[{id:'cult',name:'夥伴'},{id:'g_寵物',name:'寵物'},{id:'g_時裝',name:'時裝'},
   {id:'g_珍寶',name:'珍寶'},{id:'g_珍藏',name:'珍藏'},{id:'g_坐騎',name:'坐騎'},{id:'g_裝備',name:'裝備'}];
@@ -217,7 +257,8 @@ const GROWTH_PAGES=[{id:'cult',name:'夥伴'},{id:'g_寵物',name:'寵物'},{id:
 // 沒有對應養成的(貼紙集換/道具/能力)接在後面
 const CODEX_NAV=[...GROWTH_PAGES.map(g=>CODEX_PAGES.find(c=>c.name===g.name)).filter(Boolean),
   ...CODEX_PAGES.filter(c=>!GROWTH_PAGES.some(g=>g.name===c.name))];
-const SPECIAL=[{id:'overview',name:'總覽與規則'},...CODEX_PAGES,...GROWTH_PAGES,{id:'item',name:'道具查詢'},{id:'doc',name:'欄位說明'}];
+const SPECIAL=[{id:'home',name:'首頁'},{id:'overview',name:'總覽與規則'},...CODEX_PAGES,...GROWTH_PAGES,{id:'item',name:'道具查詢'},
+  {id:'func',name:'玩法'},{id:'recruit',name:'招募'},{id:'ploy',name:'活動排程'},{id:'period',name:'活動期'},{id:'pools',name:'招募期'},{id:'systems',name:'系統'},{id:'lib',name:'素材庫(待整理)'},{id:'shops',name:'商店'},{id:'imprest',name:'儲值'},{id:'family',name:'家族'},{id:'rules',name:'規則說明'},{id:'doc',name:'欄位說明'}];
 
 // 獲取途徑:[{名稱,說明,開啟條件}] → 一排標籤,條件寫在括號裡
 const gw=l=>!l||!l.length?'':l.map(g=>`<span class="tag" title="${esc(g.說明||'')}">${esc(g.名稱)}${g.開啟條件?` <small>(${esc(g.開啟條件)})</small>`:''}</span>`).join('');
@@ -227,8 +268,57 @@ const fmtReq=l=>(l||[]).map(x=>`${esc(x.項目??x.道具)}${x.數量??''}${x.單
 const fmtPrize=l=>(l||[]).map(x=>`<span class="tag">${esc(x.道具)}${x.數量??''}${x.單位??''}${x.備註?'('+esc(x.備註)+')':''}</span>`).join('');
 const kv=(k,v,isNull)=>`<div class="kv"><b>${k}</b><span class="${isNull?'null':''}">${v}</span></div>`;
 
+
+
+// 活動自己的那一整包 CDN 圖(介面組件、背景、標題…)。
+// 檔名帶來源路徑,所以同一個主題碼在不同期的圖不會互相蓋掉。
+function actGallery(a){
+  const g=a.活動圖||[];
+  if(!g.length) return '';
+  return `<section><h3>活動圖 <small>${g.length} 張</small></h3>
+    <p class="sub">遊戲這個活動資料夾裡的全部圖:介面組件、背景、標題。</p>
+    <div class="imgs">${g.map(x=>`<figure><img src="圖片/活動圖/${encodeURIComponent(((a.資料夾||a.名稱)+'__'+x.檔名).replace(/\.png$/i,'.webp'))}"
+      alt="${esc(x.檔名)}" loading="lazy"><figcaption>${esc(x.檔名.replace(/\.png$/i,''))}</figcaption></figure>`).join('')}</div></section>`;
+}
+// 新補的活動:名字是從遊戲的活動標題圖上讀出來的,內容待補。
+function renderFoundActivity(a){
+  const key=encodeURIComponent(a.資料夾||a.名稱);
+  let h=`<div class="hdr">
+    ${a.標題?`<img class="atitlebig" style="margin:0 12px 0 0;max-height:64px" src="圖片/活動標題/${key}.png" alt="${esc(a.名稱)}">`:''}
+    <h2>${esc(a.名稱)}</h2><span class="chip acc">活動</span>
+    ${a.期號?`<span class="chip">第 ${a.期號} 期</span>`:''}</div>`;
+  h+=`<p class="sub">這個活動本來不在網站上,是從遊戲的活動標題圖認出來的 ——
+    圖上印著活動名,${esc(a.來源?.名稱來源||'')}。</p>`;
+  const ch=a.章節||[];
+  if(ch.length) h+=`<section><h3>章節 <small>${ch.length} 章</small></h3>
+    <div class="imgs">${ch.map(c=>`<figure><img src="圖片/活動標題/${encodeURIComponent(c.名稱)}.png"
+      alt="${esc(c.名稱)}" loading="lazy"><figcaption>${c.序}. ${esc(c.名稱)}</figcaption></figure>`).join('')}</div></section>`;
+  const res=a.活動貨幣與材料||[];
+  if(res.length) h+=`<section><h3>活動貨幣與材料 <small>${res.length} 種</small></h3>
+    ${tableFromObjs(res.map(r=>({名稱:r.名稱,編號:r.編號,說明:r.說明,來源表:r.來源表})))}</section>`;
+  if((a.同一套介面||[]).length) h+=`<p class="sub">跟
+    ${a.同一套介面.map(x=>`<a href="#${encodeURIComponent(x)}">${esc(x)}</a>`).join('、')}
+    是同一套介面的不同面板(${esc(a.關係怎麼來的||'')})。</p>`;
+  if(a.上層活動) h+=`<p class="sub">這是
+    <a href="#${encodeURIComponent(a.上層活動)}">${esc(a.上層活動)}</a> 底下的子活動。</p>`;
+  if((a.底下的項目||[]).length) h+=`<section><h3>底下的項目
+    <small>${a.底下的項目.length} 個</small></h3>
+    <p class="sub">面板 = 跟它用同一個資產目錄;子活動 = 資產目錄在它底下。從路徑推的,不是我分的。</p>
+    <div class="imgs">${a.底下的項目.map(b=>`<figure>
+      ${b.圖片?`<img src="圖片/活動標題/${encodeURIComponent(b.名稱)}.png" alt="${esc(b.名稱)}" loading="lazy">`:''}
+      <figcaption>${esc(b.名稱)} <span class="chip">${esc(b.類別)}</span></figcaption></figure>`).join('')}</div></section>`;
+  h+=actGallery(a);
+  h+=`<section><h3>獎勵</h3><p class="sub">${esc(a.獎勵為什麼是空的||'')}</p></section>`;
+  h+=`<div class="grid">${kv('資產資料夾',`<code>${esc(a.資產資料夾||'')}</code>`)}
+    ${kv('期號',a.期號??'—')}</div>`;
+  return h;
+}
 function renderActivity(a,folder){
   const n=v=>v===null||v===undefined||v===''||(Array.isArray(v)&&!v.length);
+  // 從活動標題圖認出來、但內容還沒人抄進來的活動:用簡版排版。
+  // 走原本那套會變成滿畫面 null —— 那是「人工校對過的 17 個活動」的欄位,
+  // 這些新補的本來就沒有那些欄位,不是漏填。
+  if(a.資產資料夾 && !(a.階段||[]).length) return renderFoundActivity(a);
   let h=`<div class="hdr"><h2>${esc(a.名稱)}</h2>
     ${(a.別名||[]).map(x=>`<span class="chip">別名 ${esc(x)}</span>`).join('')}
     ${a.分類?`<span class="chip acc">${esc(a.分類)}</span>`:''}${a.類型?`<span class="chip">${esc(a.類型)}</span>`:''}
@@ -248,6 +338,7 @@ function renderActivity(a,folder){
   if(a.設定表階段?.length) h+=`<section><h3>各階段積分來源 <small>遊戲設定表</small></h3>${tableFromObjs(a.設定表階段.flatMap(s=>s.途徑.map((t,i)=>({階段:i?'':`${s.階段} ${s.名稱??''}`,獲取途徑:t.遊戲內原文,每次積分:t.每次積分,積分上限:t.積分獲取上限??'無上限'}))))}</section>`;
   if(a.獎勵種類?.length) h+=`<div>獎勵種類:${a.獎勵種類.map(x=>`<span class="tag">${esc(x)}</span>`).join('')}</div>`;
   if(a.全部領完總獎勵?.length) h+=`<div style="margin-top:6px">全部領完共可拿:${a.全部領完總獎勵.map(x=>`<span class="tag">${esc(x.道具)}${x.數量??''}${esc(x.單位??'')}</span>`).join('')}</div>`;
+  h+=actGallery(a);
   if(a.備註?.length) h+=`<section><h3>備註</h3><ul class="notes">${a.備註.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></section>`;
   // 階段
   const st=a.階段||[];
@@ -291,11 +382,17 @@ function renderActivity(a,folder){
   return h;
 }
 
+// 值一律跳脫,除非是 raw() 包過的 —— 有些欄位(獎勵標籤、連結)本來就是 HTML。
+// 原本整張表硬跳脫,結果傳進來的標籤會變成一串字母顯示在格子裡。
+const RAWHTML=Symbol('rawHtml');
+const raw=h=>({[RAWHTML]:String(h)});
+const cell=v=>v&&typeof v==='object'&&RAWHTML in v ? v[RAWHTML]
+            : (typeof v==='object'&&v!==null ? esc(JSON.stringify(v)) : esc(v));
 function tableFromObjs(rows){
   if(!rows?.length) return '<div class="empty">無資料</div>';
   const cols=[...new Set(rows.flatMap(r=>Object.keys(r)))];
   // 包一層可橫向捲動的容器:養成那些表格欄位很多,不包的話會把整頁撐寬
-  return `<div class="tw"><table><thead><tr>${cols.map(c=>`<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${cols.map(c=>`<td>${typeof r[c]==='object'&&r[c]!==null?esc(JSON.stringify(r[c])):esc(r[c])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+  return `<div class="tw"><table><thead><tr>${cols.map(c=>`<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${cols.map(c=>`<td>${cell(r[c])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
 }
 
 async function renderOverview(){
@@ -378,6 +475,27 @@ function fillTpl(el){
 }
 async function codex(name){ return CODEX[name] ??= await fetchJ(ROOT+'90_圖鑑/'+name+'.json'); }
 
+// 主角自己一頁。她不是夥伴 —— 使用者:「女主就不要放在夥伴那裡啊,他本來就不屬於哪裡。」
+async function renderHero(){
+  const d=await codex('主角');
+  const p=(d.主角||[])[0];
+  if(!p) return '<div class="empty">還沒有主角資料</div>';
+  let h=`<div class="hdr"><h2>主角</h2><span class="chip">${esc(p.名稱)}</span></div>
+    <p class="sub">${esc(d.說明||'')}</p><section>
+    ${p.立繪?`<img class="stand" src="${enc('圖片/'+(d.立繪圖片||{}).半身資料夾+'/'+p.立繪)}?v=${(d.立繪圖片||{}).版本||''}" alt="${esc(p.名稱)}" loading="lazy">`:''}
+    <div class="grid">${kv('編號',p.id)}${kv('稀有度',esc(p.稀有度||'—'))}${kv('品質',esc(p.品質||'—'))}
+      ${kv('星座',esc(p.星座||'—'))}${kv('生日',esc(p.生日||'—'))}${kv('血型',esc(p.血型||'—'))}${kv('年齡',esc(p.年齡||'—'))}</div>
+    ${p.介紹?`<h4 style="margin:12px 0 6px">介紹</h4><p class="sub" style="white-space:pre-wrap">${esc(p.介紹)}</p>`:''}
+    <h4 style="margin:12px 0 6px">她為什麼不在夥伴圖鑑裡</h4>
+    <p class="sub" style="white-space:pre-wrap">${esc(d.說明||'')}</p>
+    ${p.會不會動?`<h4 style="margin:12px 0 6px">動畫</h4>
+      <p class="sub">${esc(p.會不會動)}。${esc(p.動畫在哪||'')}</p>
+      <p class="sub"><small>${esc(p.為什麼沒有自己的動畫||'')}</small></p>`:''}
+    ${p.技能?.length?`<h4 style="margin:12px 0 6px">技能</h4>${tableFromObjs(p.技能.map(s=>({名稱:s.名稱,類型:s.類型,說明:s.說明})))}`:''}
+    </section>`;
+  return h;
+}
+
 async function renderPartners(){
   const d=await codex('夥伴');
   let h=`<div class="hdr"><h2>夥伴圖鑑</h2><span class="chip">${d.數量} 位</span></div><p class="sub">${esc(d.說明)}</p>`;
@@ -385,7 +503,12 @@ async function renderPartners(){
   for(const p of d.夥伴){
     const k=[p.名稱,p.稱號,p.稀有度,p.職業類型,p.定位,...(p.技能||[]).map(s=>s.名稱)].join(' ').toLowerCase();
     h+=`<details data-k="${esc(k)}"><summary>${thumb(d.圖片,p.圖,p.品質||p.稀有度,p.名稱)}<b>${esc(p.名稱)}</b>${p.限定?'<span class="chip">限定</span>':''}${p.稱號?`<span class="chip">${esc(p.稱號)}</span>`:''}${p.職業類型?`<span class="chip">${esc(p.職業類型)}</span>`:''}${p.定位?`<span class="chip">${esc(p.定位)}</span>`:''}</summary>
-      ${p.立繪?`<img class="stand${p.立繪類型==='全身'?' full':''}" src="${enc('圖片/'+(p.立繪類型==='全身'?(d.立繪圖片||{}).全身資料夾:(d.立繪圖片||{}).半身資料夾)+'/'+p.立繪)}?v=${(d.立繪圖片||{}).版本||''}" alt="${esc(p.名稱)}立繪" loading="lazy">`:''}
+      ${p.立繪?`<img class="stand${p.立繪類型!=='半身'?' full':''}" src="${enc('圖片/'+
+        (p.立繪類型==='全身'?(d.立繪圖片||{}).全身資料夾
+         :p.立繪類型==='時裝全身'?(d.立繪圖片||{}).時裝全身資料夾
+         :(d.立繪圖片||{}).半身資料夾)+'/'+p.立繪)}?v=${(d.立繪圖片||{}).版本||''}" alt="${esc(p.名稱)}立繪" loading="lazy"
+        title="${esc(p.立繪說明||'')}">`:''}
+      ${p.立繪說明?`<p class="sub"><small>${esc(p.立繪說明)}</small></p>`:''}
       <div class="grid">${kv('突破上限',p.突破上限??'—')}${kv('可覺醒',yn(p.可覺醒))}${kv('心途上限',p.心途上限??'無')}
         ${kv('攻擊',`${p.攻擊.基礎??'—'} (成長 ${p.攻擊.成長??'—'})`)}${kv('防禦',`${p.防禦.基礎??'—'} (成長 ${p.防禦.成長??'—'})`)}${kv('氣勢',`${p.氣勢.基礎??'—'} (成長 ${p.氣勢.成長??'—'})`)}
         ${kv('星座',esc(p.星座||'—'))}${kv('生日',esc(p.生日||'—'))}${kv('血型',esc(p.血型||'—'))}${kv('年齡',esc(p.年齡||'—'))}
@@ -404,7 +527,11 @@ async function renderDress(){
   for(const s of d.套裝){
     const k=[s.套裝名,s.品質,s.品牌,...(s.獲取||[]),...(s.單品||[]).map(p=>p.名稱)].join(' ').toLowerCase();
     const tpl=s.升星範本?T[s.升星範本]:null;
-    const cover=s.套裝圖?`<img class="suitpic" src="${enc('圖片/'+(d.套裝圖片||{}).資料夾+'/'+s.套裝圖)}?v=${(d.套裝圖片||{}).版本||''}" alt="${esc(s.套裝名)}" loading="lazy">`:thumb(d.圖片,s.圖,s.品質,s.套裝名);
+    // 封面是套裝立繪,外面要套品質框 —— 其他圖鑑都有,時裝原本漏了
+    const fr=((d.圖片||{}).品質框||[]).includes(s.品質);
+    const cover=s.套裝圖
+      ? `<span class="suitcover${fr?'':' noframe'}"${fr?` style="background-image:url('${enc('圖片/框/品質框_'+s.品質+'.png')}?v=${(d.圖片||{}).版本||''}')"`:''} title="${esc(s.品質||'')}"><img class="suitpic" src="${enc('圖片/'+(d.套裝圖片||{}).資料夾+'/'+s.套裝圖)}?v=${(d.套裝圖片||{}).版本||''}" alt="${esc(s.套裝名)}" loading="lazy"></span>`
+      : thumb(d.圖片,s.圖,s.品質,s.套裝名);
     h+=`<details data-k="${esc(k)}"><summary>${cover}<b>${esc(s.套裝名)}</b><span class="chip">${s.件數} 件</span>${s.品牌?`<span class="chip">${esc(s.品牌)}</span>`:''}${tpl?`<span class="chip">最高 ${tpl.最高星} 星</span>`:''}</summary>
       ${s.全身圖?`<img class="stand full" src="${enc('圖片/'+(d.全身圖片||{}).資料夾+'/'+s.全身圖)}?v=${(d.全身圖片||{}).版本||''}" alt="${esc(s.套裝名)}" loading="lazy">`:''}
       ${s.介紹?`<p class="sub">${esc(s.介紹)}</p>`:''}
@@ -451,7 +578,7 @@ async function renderAbilities(){
     h+=`<details data-k="${esc(k)}"><summary>${thumb(d.圖片,a.圖,a.品質,a.名稱)}<b>${esc(a.名稱)}</b> <span class="chip acc">${esc(a.分類)}</span><span class="chip">${a.等級數} 級</span></summary>
       ${a.說明?`<p class="sub">${esc(a.說明)}</p>`:''}
       ${e1?.效果?`<p>${esc(e1.效果)}</p>`:''}
-      <div class="grid">${kv('完美等級',a.完美等級??'—')}${kv('等級數',a.等級數)}${kv('獲取',(a.獲取說明||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('')||'—')}</div>
+      <div class="grid">${kv('完美等級',a.完美等級??'—')}${kv('等級數',a.等級數)}${a.解鎖條件?kv('解鎖',esc(a.解鎖條件)):''}${kv('獲取',(a.獲取說明||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('')||'—')}</div>
       <details style="margin-top:10px" data-aid="${a.id}" ontoggle="fillAbility(this)"><summary class="sub">每級消耗與加成(${a.等級數} 級)</summary><div class="tpl-body"><div class="empty">展開中…</div></div></details>
       </details>`;
   }
@@ -467,7 +594,7 @@ async function renderGuardian(){
     const k=[g.名稱,g.品質,g.定位,bind,...(g.獲取||[]),...(g.技能||[]).map(t=>t.名稱)].join(' ').toLowerCase();
     h+=`<details data-k="${esc(k)}"><summary>${thumb(d.圖片,g.圖,g.品質,g.名稱)}<b>${esc(g.名稱)}</b>${g.定位?`<span class="chip">${esc(g.定位)}</span>`:''}<span class="chip">${esc(bind)}</span>${g.專屬?'<span class="chip">專屬</span>':''}${g.基礎戰力?`<span class="chip">戰力 ${g.基礎戰力}</span>`:''}</summary>
       ${g.說明?`<p class="sub">${esc(g.說明)}</p>`:''}
-      <div class="grid">${kv('階',g.階??'—')}${kv('啟動屬性',esc(g.啟動屬性||'—'))}${kv('分解可得',esc(g.分解可得||'—'))}${kv('合成需求數',g.合成需求數??'—')}${g.獲取?kv('獲取',g.獲取.map(x=>`<span class="tag">${esc(x)}</span>`).join('')):''}</div>
+      <div class="grid">${kv('階',g.階??'—')}${kv('啟動屬性',esc(g.啟動屬性||'—'))}${kv('分解可得',esc(g.分解可得||'—'))}${kv('合成需求數',g.合成需求數??'—')}${kv('獲取',(g.獲取||[]).map(x=>`<span class="tag">${esc(x)}</span>`).join('')||(g.反查結論?`<span class="sub" title="${esc(g.反查結論)}">查無(已掃過全部設定表)</span>`:'—'))}</div>
       ${g.技能?.length?g.技能.map(t=>`<h4 style="margin:12px 0 6px">技能 — ${esc(t.名稱)}</h4>${tableFromObjs((t.等級||[]).map(l=>({級:l.級,說明:l.說明})))}`).join(''):'<p class="sub">技能詞條待補</p>'}</details>`;
   }
   return h+`</section>`;
@@ -497,7 +624,7 @@ async function renderCar(){
     h+=`<details data-k="${esc([c.名稱,c.品質,c.說明||'',c.取得方式||'',gwText(c.獲取)].join(' ').toLowerCase())}"><summary>${thumb(d.圖片,c.圖,c.品質,c.名稱)}<b>${esc(c.名稱)}</b>${c.限定?'<span class="chip">限定</span>':''}${c.啟動屬性?`<span class="chip">${esc(c.啟動屬性)}</span>`:''}</summary>
       ${c.立繪?`<img class="stand full" src="${enc('圖片/'+(d.立繪圖片||{}).資料夾+'/'+c.立繪)}?v=${(d.立繪圖片||{}).版本||''}" alt="${esc(c.名稱)}" loading="lazy">`:''}
       ${c.說明?`<p class="sub">${esc(c.說明)}</p>`:''}
-      <div class="grid">${kv('啟動屬性',esc(c.啟動屬性||'—'))}${kv('獲取',(c.獲取說明||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('')||'—')}${kv('戰鬥技能',esc(c.戰鬥技能?.名稱||'—'))}${c.獲取?kv('可前往',gw(c.獲取)):''}</div>
+      <div class="grid">${kv('啟動屬性',esc(c.啟動屬性||'—'))}${kv('獲取',[...(c.獲取說明||[]),...(c.獲取||[]).map(w=>w.名稱)].map(t=>`<span class="tag">${esc(t)}</span>`).join('')||(c.反查結論?`<span class="sub" title="${esc(c.反查結論)}">查無(已掃過全部設定表)</span>`:'—'))}${kv('戰鬥技能',esc(c.戰鬥技能?.名稱||'—'))}${c.獲取?kv('可前往',gw(c.獲取)):''}</div>
       ${c.坐騎技能?.length?tableFromObjs(c.坐騎技能.map(s=>({技能:s.名稱,說明:s.說明||''}))):''}</details>`;
   }
   return h+`</section>`;
@@ -554,10 +681,23 @@ async function renderStickerAlbum(id){
   const b=d.畫冊.find(x=>String(x.id)===String(id));
   if(!b) return `<div class="empty">找不到畫冊 #${esc(id)}</div>`;
   PAGE_TITLE=b.名稱+' · 貼紙集換';
-  let h=`<div class="hdr">${thumb(stCover(d),b.圖,'',b.名稱)}<h2>${esc(b.名稱)}</h2><span class="chip acc">${esc(b.主題||'')}</span><span class="chip">#${b.id}</span></div>`;
+  let h=`<div class="hdr">${thumb(stCover(d),b.圖,'',b.名稱)}<h2>${esc(b.名稱)}</h2><span class="chip acc">${esc(b.主題||'')}</span><span class="chip">#${b.id}</span>
+    ${b.金邊張數?`<span class="chip">金邊 ${b.金邊張數} 張</span>`:''}
+    <span class="chip">${(b.貼紙||[]).filter(x=>x.圖).length}/${(b.貼紙||[]).length} 有圖</span></div>
+    ${b.圖片說明?`<p class="sub">${esc(b.圖片說明)}</p>`:''}`;
   h+=stBack('#st_'+encodeURIComponent(b.主題||''),b.主題||'回主題');
   h+=`<section><h3>貼紙 <small>${(b.貼紙||[]).length} 張</small></h3><div class="icards">`;
-  h+=(b.貼紙||[]).map(x=>`<div class="icard">${thumb(d.圖片,x.圖,x.品質,x.名稱).replace('class="thm','class="thm big')}<div class="txt"><div class="nm">${esc(x.名稱)}</div><div class="ds">#${x.id}</div></div></div>`).join('');
+  // 貼紙有兩種狀態:彩色(已解鎖)和未解鎖版;金邊的未解鎖時是金色、一般的是灰色。
+  // 這些欄位素材裡都有,原本一個都沒畫出來。
+  const un=({...(d.圖片||{}),資料夾:(d.圖片||{}).未解鎖資料夾});
+  h+=(b.貼紙||[]).map(x=>`<div class="icard">
+    ${thumb(d.圖片,x.圖,x.品質,x.名稱).replace('class="thm','class="thm big')}
+    ${x.未解鎖圖?thumb(un,x.未解鎖圖,x.品質,x.名稱+'(未解鎖)').replace('class="thm','class="thm big'):''}
+    <div class="txt"><div class="nm">${esc(x.名稱)}${x.金邊?'<span class="chip acc">金邊</span>':''}</div>
+      <div class="ds">#${x.id} · ${esc(x.品質||'')}
+        ${x.圖?'':'<br><span class="sub">沒有圖</span>'}
+        ${x.未解鎖圖來源?`<br><small class="sub">未解鎖版:${esc(x.未解鎖圖來源)}</small>`:''}
+      </div></div></div>`).join('');
   h+=`</div></section><section><h3>集滿獎勵</h3>${tableFromObjs((b.集滿獎勵||b.獎勵||[]).map(r=>({集滿張數:r.集滿張數,獎勵:r.獎勵,備註:r.備註||''})))}</section>`;
   return h;
 }
@@ -582,6 +722,8 @@ function decoSrc(x){
   // 條件(幾級開放)屬於那個玩法自己的頁面,不寫在這張卡上
   let all=[...(x.獲取說明||[]),...(x.獲取||[]).map(g=>g.名稱),...named];
   if(!all.length) all=vague;
+  // 查過了真的沒有 ≠ 還沒查。空白看起來像後者,所以把查證結果寫出來。
+  if(!all.length&&x.反查結論) return `<div class="series sub" title="${esc(x.反查結論)}">查無(已掃過全部設定表)</div>`;
   // 已經查到是哪一個去處(「京城歷練」「畫冊商店」)就不要再掛籠統的那個
   if(all.some(t=>/.歷練$/.test(t))) all=all.filter(t=>t!=='進行歷練'&&t!=='歷練地點');
   if(all.some(t=>t.length>2&&/(商店|商城)$/.test(t))) all=all.filter(t=>t!=='商店'&&t!=='商城');
@@ -612,7 +754,7 @@ function decoCard(x,wide){
       (plate?`<span class="qchip" style="background-image:${plate}" title="${esc(x.品質)}"></span>`:'');
   else pic=ks.map(k=>`<span class="plate" style="background-image:${plate}" title="${esc(x.品質||'')}">${decoImg(x,k)}</span>`).join('');
   return `<div class="deco${wide?' wide':''}" data-k="${esc([x.名稱,x.種類,x.品質,x.子分頁||'',x.說明||''].join(' ').toLowerCase())}">
-    <div class="pic">${pic}</div>
+    <div class="pic${ks.length>1?' multi':''}">${pic}</div>
     <div class="nm">${esc(x.名稱)}</div>
     <div class="ds">${x.子分頁?`<b>${esc(x.子分頁)}</b><br>`:''}${esc(x.說明||'')}${decoSrc(x)}
       ${decoSeries(x)}</div></div>`;
@@ -648,6 +790,534 @@ async function renderFace(cat){
     h+=`<section><h3>${esc(tab)} <small>${sub.length} 個 · ${sub.filter(x=>x.圖示).length} 個有圖</small></h3>
       <div class="decos${wide?' wide':''}">${sub.map(x=>decoCard(x,wide)).join('')}</div></section>`;
   return h;
+}
+
+// ---------- 玩法 / 招募 / 規則 ----------
+// 這三類素材樹早就有(玩法 120、招募 7、規則 359),但一直沒有頁面可以看。
+const OTHER={};
+async function other(name){ return OTHER[name] ??= await fetchJ(ROOT+'95_其他/'+name+'.json'); }
+
+async function renderFunc(){
+  const d=await other('玩法');
+  const list=[...(d.項目||[])].sort((a,b)=>
+    (b.橫幅?1:0)-(a.橫幅?1:0) || ((b.兌換商店?1:0)+(b.招募卡池?1:0))-((a.兌換商店?1:0)+(a.招募卡池?1:0)));
+  let h=`<div class="hdr"><h2>玩法</h2><span class="chip">${d.數量} 個</span>
+      <span class="chip acc">${list.filter(x=>x.橫幅).length} 個有自己的橫幅</span></div>
+    <p class="sub">遊戲裡那排「可前往×××」的去處,來自 GetWay + FuncOpen。
+      開啟條件用的是 <code>FuncOpen.unlock_content</code> —— 遊戲自己寫好的那句話,
+      不是我把 <code>4_25,439_2</code> 解碼出來的。
+      底下掛的招募卡池與兌換商店靠 <code>GetWay.funcopen_id</code> 接
+      (<b>不能直接拿 RecruitPool.func_id 去對 GetWay</b>,那是另一個編號空間,
+      對出來夥伴邀約會變成「氣運東珠」)。</p>`;
+  h+=`<section>${searchBox('搜尋玩法 / 說明 / 可獲得 / 商品…')} <span class="codex-count sub"></span>`;
+  for(const x of list){
+    const shops=x.兌換商店||[], pools=x.招募卡池||[];
+    const k=[x.名稱,x.官方名稱||'',x.說明||'',...(x.可獲得||[]).map(g=>g.名稱),
+             ...shops.flatMap(s=>(s.商品||[]).map(g=>g.商品||''))].join(' ').toLowerCase();
+    const key=encodeURIComponent(x._路徑||x.名稱);
+    h+=`<details data-k="${esc(k)}"><summary>
+      ${x.標題?`<img class="atitle" src="圖片/活動標題/${key}.png" alt="" loading="lazy">`
+        :x.橫幅?`<img class="fbansm" src="圖片/玩法橫幅/${key}.png" alt="" loading="lazy">`
+        :`<img class="ficon" src="圖片/玩法圖示/${x.func_id}.png" alt="" loading="lazy"
+             data-alt="圖片/玩法入口圖/${x.func_id}.png"
+             onerror="if(this.dataset.alt){this.src=this.dataset.alt;this.dataset.alt='';}else{this.style.visibility='hidden';}">`}
+      <b>${esc(x.名稱)}</b>
+      ${x.官方名稱&&x.官方名稱!==x.名稱?`<span class="chip">${esc(x.官方名稱)}</span>`:''}
+      ${pools.length?`<span class="chip acc">${pools.length} 個卡池</span>`:''}
+      ${shops.length?`<span class="chip acc">${shops.reduce((a,s)=>a+(s.商品數||0),0)} 件商品</span>`:''}
+      </summary>
+      ${x.標題?`<img class="atitlebig" src="圖片/活動標題/${key}.png" alt="${esc(x.名稱)}" loading="lazy">`:''}
+      ${x.橫幅?`<img class="fbanner" style="max-width:420px;border-radius:10px" src="圖片/玩法橫幅/${key}.png" alt="" loading="lazy">`:''}
+      ${x.說明?`<p class="sub">${esc(x.說明)}</p>`:''}
+      <div class="grid">${kv('開啟條件',esc(x.開啟條件||'—'))}
+        ${x.開啟條件原碼?kv('條件原碼',`<code>${esc(x.開啟條件原碼)}</code>`):''}</div>
+      ${(x.可獲得||[]).length?`<h4 style="margin:12px 0 6px">可獲得 <small>${x.可獲得.length} 項</small></h4>
+        <div class="sub" style="margin-bottom:6px">來自遊戲自己的「可前往×××」標示(各設定表的 <code>get_way</code> 欄),
+          不是掃獎勵欄猜的。這是遊戲列的主要途徑,不等於全部掉落。</div>
+        ${Object.entries(x.可獲得.reduce((m,g)=>((m[g.類型]=m[g.類型]||[]).push(g),m),{}))
+          .map(([t,v])=>`<div style="margin:4px 0"><span class="chip acc">${esc(t)}</span>
+            ${v.map(g=>`<span class="tag">${esc(g.名稱)}</span>`).join('')}</div>`).join('')}`:''}
+      ${pools.length?`<h4 style="margin:12px 0 6px">招募卡池</h4>
+        <div>${pools.map(pp=>`<span class="tag">${esc(pp.名稱)}${pp.官方名稱&&pp.官方名稱!==pp.名稱?`(遊戲內叫「${esc(pp.官方名稱)}」)`:''}</span>`).join('')}</div>`:''}
+      ${x.程式系統名?`<p class="sub">遊戲程式裡這個系統叫
+        <code>${esc(x.程式系統名.英文)}</code>${x.程式系統名.程式註解?`(原始碼註解「${esc(x.程式系統名.程式註解)}」)`:''},
+        func_id ${x.程式系統名.func_id};${x.程式系統名.證實份數} 份資料證實:
+        ${esc((x.程式系統名.證實||[]).join('、'))}。
+        中文名跟英文名常常完全不同字(血月危機在程式裡叫 SuperGhostKing「超鬼王」),
+        所以這一欄是接設定表和資產目錄的鑰匙。</p>`:''}
+      ${x.樹?`<h4 style="margin:12px 0 6px">這個玩法底下有什麼</h4>
+        <p class="sub">每一枝都標出是哪一條遊戲資料接起來的;接不到的枝不會長出來。</p>
+        ${Object.entries(x.樹).map(([k,v])=>`<div class="grid">${kv(k,
+          (Array.isArray(v.內容)
+            ? v.內容.map(b=>b.圖鑑==='夢魘'
+                ? `<a class="tag" href="#nightmare" title="詳細資料在夢魘圖鑑">
+                     ${b.有圖?`<img src="圖片/夢魘_頭像/${b.圖片編號}.png" style="height:22px;vertical-align:middle;margin-right:4px" loading="lazy">`:''}${esc(b.名稱)}</a>`
+                : `<span class="tag">${esc(b.名稱||JSON.stringify(b))}${b.類型?` <small>(${esc(b.類型)})</small>`:''}</span>`).join('')
+            : typeof v.內容==='object'
+              ? Object.entries(v.內容).map(([a,b])=>`<span class="tag">${esc(a)}:${esc(String(b))}</span>`).join('')
+              : esc(String(v.內容)))
+          +`<div class="sub" style="margin-top:4px">依據:${esc(v.依據||'')}${v.信心?`(${esc(v.信心)})`:''}</div>`
+        )}</div>`).join('')}`:''}
+      ${x.開在哪個頁面裡?`<p class="sub">這個去處開在
+        <a href="#func">${esc(x.開在哪個頁面裡.頁面)}</a> 的頁面裡
+        ${x.這個去處的類型?`,類型是 ${esc(x.這個去處的類型)}`:''} —— ${esc(x.開在哪個頁面裡.依據)}</p>`:''}
+      ${(x.底下的項目||[]).length?`<h4 style="margin:12px 0 6px">底下的項目
+        <small>${x.底下的項目.length} 個</small></h4>
+        <p class="sub">面板 = 跟這個玩法用同一個資產目錄;子活動 = 資產目錄在它底下。
+          這是從遊戲資產的路徑推的,不是我分的。</p>
+        <div class="imgs">${x.底下的項目.map(b=>`<figure>
+          ${b.圖片?`<img src="圖片/活動標題/${encodeURIComponent(b.名稱)}.png" alt="${esc(b.名稱)}" loading="lazy">`:''}
+          <figcaption>${esc(b.名稱)} <span class="chip">${esc(b.類別)}</span>
+          ${b.期號?`<span class="chip">第 ${esc(b.期號)} 期</span>`:''}</figcaption></figure>`).join('')}</div>`:''}
+      ${(x.活動圖||[]).length?`<h4 style="margin:12px 0 6px">活動圖 <small>${x.活動圖.length} 張</small></h4>
+        <div class="imgs">${x.活動圖.map(g=>`<figure><img loading="lazy"
+          src="圖片/活動圖/${encodeURIComponent(((x._路徑||x.名稱)+'__'+g.檔名).replace(/\.png$/i,'.webp'))}" alt="${esc(g.檔名)}">
+          <figcaption>${esc(g.檔名.replace(/\.png$/i,''))}</figcaption></figure>`).join('')}</div>`:''}
+      ${x.對應活動?`<p class="sub">這個玩法在網站上另有活動頁:
+        <a href="#${encodeURIComponent(x.對應活動)}">${esc(x.對應活動)}</a>
+        ${x.對應活動!==x.名稱?'(遊戲兩邊用字不同,指的是同一件事)':''}</p>`:''}
+      ${x.官方規則?`<details style="margin-top:10px"><summary class="sub">官方規則原文</summary>
+        <div class="ruleslot" data-rule="${esc(x.官方規則)}">載入中…</div></details>`:''}
+      ${shops.map(sh=>`<h4 style="margin:12px 0 6px">${esc(sh.商店)} <small>${sh.商品數} 件</small></h4>
+        ${tableFromObjs((sh.商品||[]).map(g=>({商品:g.商品,售價:g.售價,原價:g.原價||'—',
+          折扣:g.折扣||'—',每次上限:g.每次上限??'—',購買上限:g.購買上限||'—'})))}`).join('')}
+      </details>`;
+  }
+  return h+`</section>`;
+}
+
+// 玩法底下的「官方規則原文」:規則資料另外一包,展開才去抓,不要一進頁面就拉 359 筆。
+async function fillRules(root){
+  const slots=[...(root||document).querySelectorAll('.ruleslot:not([data-done])')];
+  if(!slots.length) return;
+  const d=await other('規則');
+  const by={}; for(const r of (d.項目||[])) by[r.檔名]=r;
+  for(const el of slots){
+    const r=by[el.dataset.rule];
+    el.innerHTML=r?ruleBody(r.段落||[]):'<span class="nul">找不到這份規則</span>';
+    el.setAttribute('data-done','1');
+  }
+}
+document.addEventListener('toggle',e=>{
+  if(e.target.tagName==='DETAILS'&&e.target.open) fillRules(e.target);
+},true);
+function funcPick(el,name){
+  const q=document.querySelector('.codex-q');
+  if(q){ q.value=name; codexFilter(q); q.scrollIntoView({block:'center'}); }
+  return false;
+}
+
+async function renderRecruit(){
+  const d=await other('招募');
+  let h=`<div class="hdr"><h2>招募</h2><span class="chip">${d.數量} 個卡池</span></div>
+    <p class="sub">機率與保底是遊戲內「規則說明」的原文(官方公示),不是推算的。</p><section>`;
+  for(const x of d.項目){
+    // 橫幅/標題是這個卡池自己的圖,設定表直接寫了檔名
+    const key=encodeURIComponent(x._路徑||x.名稱);
+    // 標題圖只有字,縮小當標籤剛好;橫幅有角色和場景,值得放大。
+    const ttl=(x.圖片||{}).標題?`<img class="rtitle" src="圖片/招募標題/${key}.png" alt="${esc(x.名稱)}" loading="lazy">`:'';
+    const ban=(x.圖片||{}).橫幅?`<img class="rbanner" src="圖片/招募橫幅/${key}.png" alt="${esc(x.名稱)}" loading="lazy">`:'';
+    h+=`<details><summary>${ttl}<b>${esc(x.名稱)}</b><span class="chip">${esc(x.產出類型||'')}</span>
+      <span class="chip">${esc(x.單抽消耗||'—')}</span>${x.名單筆數?`<span class="chip">${x.名單筆數} 位</span>`:'<span class="chip">名單未公布</span>'}</summary>
+      ${ban?`<div style="text-align:center;margin:10px 0">${ban}</div>`:''}
+      <div class="grid">${kv('卡池編號',x.卡池編號??'—')}${kv('可免費',yn(x.可免費))}${kv('免費次數',x.免費次數??'—')}</div>
+      ${x.機率?`<h4 style="margin:12px 0 6px">官方機率公示</h4>
+        ${tableFromObjs(Object.entries(x.機率).map(([k,v])=>({項目:k,機率:v+'%'})))}`:''}
+      ${(x.保底||[]).length?`<ul class="notes">${x.保底.map(t=>`<li>${esc(t)}</li>`).join('')}</ul>`:''}
+      ${(x.本期推薦||[]).length?`<div class="grid">${kv('本期推薦',x.本期推薦.map(r=>`<span class="tag">${esc(r.名稱)}</span>`).join(''))}</div>`:''}
+      ${(x.卡池名單||[]).length?`<h4 style="margin:12px 0 6px">卡池名單 <small>${x.名單筆數} 位</small></h4>
+      <div>${x.卡池名單.map(r=>`<span class="tag">${esc(r.名稱)}</span>`).join('')}</div>`
+      :`<p class="sub">名單由伺服器每期下發,client 設定表裡沒有</p>`}
+      ${(x.規則原文||[]).length?`<details style="margin-top:10px"><summary class="sub">規則原文</summary>
+        ${ruleBody(x.規則原文)}</details>`:''}
+      <p class="sub" style="margin-top:8px">機率來源:${esc(x.機率來源||'—')}</p>
+    </details>`;
+  }
+  return h+`</section>`;
+}
+
+// 規則原文的段落分三級:onetitle / twotitle / threetitle,其餘是內文
+function ruleBody(paras){
+  return (paras||[]).map(p=>{
+    const t=p.層級||'', x=esc(p.文字||'');
+    if(t==='onetitle') return `<h4 style="margin:12px 0 4px">${x}</h4>`;
+    if(t==='twotitle') return `<div style="margin:10px 0 2px;font-weight:500">${x}</div>`;
+    if(t==='threetitle') return `<div class="sub" style="margin:6px 0 2px">${x}</div>`;
+    return `<p class="sub" style="margin:2px 0;white-space:pre-wrap">${x}</p>`;
+  }).join('');
+}
+
+async function renderRules(){
+  const d=await other('規則');
+  let h=`<div class="hdr"><h2>規則說明</h2><span class="chip">${d.數量} 份</span>
+      <span class="chip acc">${d.項目.filter(x=>x.機率).length} 份有機率公示</span></div>
+    <p class="sub">遊戲內「規則說明」按鈕點開的原文(台版)。官方機率公示就在這裡。</p>`;
+  h+=`<section>${searchBox('搜尋標題 / 內文…')} <span class="codex-count sub"></span>`;
+  for(const x of d.項目){
+    const body=(x.段落||[]).map(p=>p.文字||'').join(' ');
+    h+=`<details data-k="${esc((x.標題+' '+x.檔名+' '+body).toLowerCase())}">
+      <summary><b>${esc(x.標題||x.檔名)}</b>${x.機率?'<span class="chip acc">有機率公示</span>':''}
+        <small class="sub">${esc(x.檔名)}</small></summary>
+      ${x.機率?`${tableFromObjs(Object.entries(x.機率).map(([k,v])=>({項目:k,機率:v+'%'})))}`:''}
+      ${(x.保底||[]).length?`<ul class="notes">${x.保底.map(t=>`<li>${esc(t)}</li>`).join('')}</ul>`:''}
+      ${ruleBody(x.段落)}</details>`;
+  }
+  return h+`</section>`;
+}
+
+// ---------- 首頁(路口)----------
+// 先前一進站是直接跳到第一個活動(回輪竹語),等於沒有路口 ——
+// 看不出這裡有什麼、也不知道從哪開始。這頁就是那個路口。
+async function renderHome(){
+  const f=await other('玩法').catch(()=>({項目:[]}));
+  const ban=(f.項目||[]).filter(x=>x.橫幅||x.標題);
+  const codexDone=CODEX_NAV.filter(c=>c.id!=='sticker');
+  let h=`<div class="hdr"><h2>巡夢少女 資料庫</h2><span class="chip">${INDEX.length} 個活動</span>
+      <span class="chip">${(f.項目||[]).length} 個玩法</span></div>
+    <p class="sub">資料全部來自遊戲設定表(解包),查不到的欄位留空並註明,不猜、不補。</p>`;
+
+  if(ban.length) h+=`<section><h3>活動與玩法</h3>
+    <div class="decos wide">${ban.map(x=>`
+      <a class="deco wide" href="#func" style="text-decoration:none;color:inherit">
+        <div class="pic" style="height:auto;padding:0;background:none">
+          <img class="fbanner" src="圖片/${x.橫幅?'玩法橫幅':'活動標題'}/${encodeURIComponent(x._路徑||x.名稱)}.png" alt="${esc(x.名稱)}" loading="lazy"></div>
+        <div class="nm">${esc(x.名稱)}</div>
+        <div class="ds">${esc(x.說明||'')}</div></a>`).join('')}</div></section>`;
+
+  h+=`<section><h3>圖鑑</h3><div class="hub">${codexDone.map(c=>`
+    <a class="hubcard" href="#${c.id}"><div class="t"><span>${esc(c.name)}</span></div></a>`).join('')}</div></section>`;
+
+  const done=INDEX.filter(a=>!a.內容待補), todo=INDEX.filter(a=>a.內容待補);
+  const card=a=>`<a class="hubcard" href="#${encodeURIComponent(a.資料夾)}">
+      ${a.標題?`<img class="atitle" style="max-width:100%;height:36px;margin:0 0 4px" loading="lazy"
+         src="圖片/活動標題/${encodeURIComponent(a.名稱)}.png" alt="${esc(a.名稱)}">`:''}
+      <div class="t"><span>${esc(a.名稱)}</span>${a.分類?`<span class="chip">${esc(a.分類)}</span>`:''}</div>
+      <div class="d">${esc(a.類型||'')}${a.階段數?` · ${a.階段數} 階`:''}${a.活動圖數?` · ${a.活動圖數} 張圖`:''}</div></a>`;
+  h+=`<section><h3>限時活動</h3><p class="sub">各活動的階段獎勵、排行獎勵與全拿總需求</p>
+    <div class="hub">${done.map(card).join('')}</div></section>`;
+  if(todo.length) h+=`<section><h3>已認出、內容待補的活動 <small>${todo.length} 個</small></h3>
+    <p class="sub">這些活動本來不在網站上,是從遊戲的活動標題圖認出來的。
+      名字和圖是確定的,獎勵內容由伺服器下發、設定表查不到,要有人在遊戲裡抄下來才會有。</p>
+    <div class="hub">${todo.map(card).join('')}</div></section>`;
+
+  h+=`<section><h3>其他</h3><div class="hub">${[
+      {id:'overview',name:'總覽與規則',d:'每日/每週輪替、事件上限'},
+      {id:'func',name:'玩法',d:'120 個去處與開啟條件'},
+      {id:'recruit',name:'招募',d:'官方機率公示與卡池名單'},
+      {id:'rules',name:'規則說明',d:'359 份遊戲內原文'},
+      {id:'item',name:'道具查詢',d:'純表格,適合搜尋'},
+      {id:'doc',name:'欄位說明',d:'每個欄位怎麼來的'},
+    ].map(x=>`<a class="hubcard" href="#${x.id}"><div class="t"><span>${esc(x.name)}</span></div>
+      <div class="d">${esc(x.d)}</div></a>`).join('')}</div></section>`;
+  return h;
+}
+
+// 家族(行業協會)系統:商店/捐獻/砍價/等級獎勵/盛會/戰利品/修煉/靈田/職位/動員。
+// 資料是 mumu 從 Union*/Guild* 39 張表挖的,整塊獎勵碼由 工具/獎勵碼.py 補名字。
+const famList=o=>Array.isArray(o)?o:[];
+function famCell(v){
+  if(v==null) return '—';
+  if(Array.isArray(v)) return v.map(g=>typeof g==='object'
+      ? `<span class="tag${g.候選?' amb':''}" title="${esc(g.為什麼分不出來||g.原碼||'')}">${esc(g.名稱||'待確認')}${g.數量?'×'+esc(g.數量):''}${g.候選?' ?':''}</span>`
+      : `<span class="tag">${esc(g)}</span>`).join('')||'—';
+  if(typeof v==='object') return Object.entries(v).map(([k,x])=>
+      `<b class="sub">${esc(k)}</b> ${famCell(x)}`).join('<br>');
+  return esc(v);
+}
+async function renderFamily(){
+  const d=await other('家族');
+  const list=d.項目||[];
+  let h=`<div class="hdr"><h2>家族</h2><span class="chip">${list.length} 個子系統</span></div>
+    <p class="sub">${esc(d.說明||'')}</p>`;
+  for(const sub of list){
+    const items=famList(sub.項目);
+    h+=`<details><summary><b>${esc(sub.名稱)}</b>
+      ${items.length?`<span class="chip">${items.length} 筆</span>`:''}
+      ${(sub.設定表||[]).length?`<small class="sub">${esc((sub.設定表||[]).join(' / '))}</small>`:''}</summary>
+      ${sub.說明?`<p class="sub">${esc(sub.說明)}</p>`:''}
+      ${items.length?tableFromObjs(items.map(x=>{
+        const row={名稱:x.名稱||'—'};
+        // 有些子系統多幾欄(盛會有地點和熱度階梯、等級獎勵有遊戲原文),有才加,不要整排空欄
+        if(items.some(y=>y.地點)) row.地點=x.地點||'—';
+        row.產出=raw(famCell(x.產出)); row.消耗=raw(famCell(x.消耗));
+        if(items.some(y=>y.熱度獎勵)) row.熱度獎勵=raw((x.熱度獎勵||[]).map(s=>
+          `<b class="sub">${esc(s.熱度門檻)}</b> ${famCell(s.獎勵)}`).join('<br>')||'—');
+        row.上限=x.上限??'—';
+        row.條件=raw(x.條件?esc(x.條件):(x.條件原碼&&Object.keys(x.條件原碼).length?`<code>${esc(JSON.stringify(x.條件原碼))}</code>`:'—'));
+        if(items.some(y=>y.遊戲原文)) row.遊戲原文=x.遊戲原文||'—';
+        return row;
+      })):''}
+      ${(sub.圖組||[]).map(g=>`<h4 style="margin:12px 0 6px">${esc(g.標題)}</h4>
+        <div class="imgs">${(g.圖||[]).map(im=>`<figure>
+          <a href="圖片/家族美術/${enc(im.檔名)}" target="_blank">
+            <img src="圖片/家族美術/${enc(im.檔名)}" alt="" loading="lazy"></a>
+          <figcaption>${esc(im.說明||im.檔名)}</figcaption></figure>`).join('')}</div>`).join('')}
+      ${Object.entries(sub).filter(([k,v])=>Array.isArray(v)&&k!=='項目'&&k!=='設定表'&&k!=='沒解開的'&&k!=='圖組'&&v.length)
+        .map(([k,v])=>`<h4 style="margin:12px 0 6px">${esc(k)} <small>${v.length} 筆</small></h4>
+          ${tableFromObjs(v.map(x=>typeof x==='object'?Object.fromEntries(
+            Object.entries(x).map(([kk,vv])=>[kk,raw(famCell(vv))])):{值:esc(x)}))}`).join('')}
+      ${(sub.沒解開的||[]).length?`<h4 style="margin:12px 0 6px">沒解開的</h4>
+        <ul class="notes">${sub.沒解開的.map(t=>`<li>${esc(t)}</li>`).join('')}</ul>`:''}
+    </details>`;
+  }
+  if(d.不收的表) h+=`<section><h3>不收的表</h3><ul class="notes">${
+    Object.entries(d.不收的表).map(([k,v])=>`<li><code>${esc(k)}</code> — ${esc(v)}</li>`).join('')}</ul></section>`;
+  return h;
+}
+
+// 儲值檔位:付多少台幣、拿到多少靈玉。欄位意思是靠設定表自己的 desc 確認的。
+async function renderImprest(){
+  const d=await other('儲值');
+  let h=`<div class="hdr"><h2>儲值</h2><span class="chip">${d.數量} 組</span></div>
+    <p class="sub">${esc(d.說明)}</p>`;
+  for(const g of (d.項目||[])){
+    // 活動裡那個專屬儲值介面:一組一格,台幣金額是 join ImprestItem 查出來的
+    if(g.介面組){
+      h+=`<section><h3>${esc(g.名稱)} <small>${g.筆數} 個</small></h3>
+        <p class="sub">${esc(g.說明||'')}</p>
+        ${g.介面組.map(k=>`<h4 style="margin:12px 0 6px">介面組 ${esc(k.介面組)}
+          <small>${k.筆數} 格</small></h4>
+          ${tableFromObjs((k.禮包||[]).map(x=>({禮包:x.名稱, 台幣:x.台幣??'免費',
+            獎勵:x.獎勵, 購買上限:x['購買上限原碼']||'—',
+            可看廣告:x.可看廣告?'是':'否'})))}`).join('')}</section>`;
+      continue;
+    }
+    const isGift=g.名稱==='限時觸發禮包';
+    h+=`<section><h3>${esc(g.名稱)} <small>${g.筆數} 個</small></h3>
+      ${g.說明?`<p class="sub">${esc(g.說明)}</p>`:''}
+      ${tableFromObjs((g.檔位||[]).map(x=>isGift?({
+        名稱:x.名稱, 內容:x.內容, 需要道具:x.需要道具||'—', 折扣:x.折扣||'—',
+        持續:x['持續(分)']?x['持續(分)']+' 分':'—',
+        觸發條件:x.觸發條件||'—', 一次性:x.一次性?'是':'否',
+      }):({
+        名稱:x.名稱, 台幣:x.台幣??'—', 獲得靈玉:x.獲得靈玉??'—',
+        每靈玉台幣:x.每靈玉台幣??'—', 每人上限:x.每人上限??'—', 說明:x.說明||'—',
+      })))}</section>`;
+  }
+  return h;
+}
+
+// 商店:賣什麼、多少錢、有沒有條件。
+// ShopDefine 沒有 shop_id,靠 type 對 ShopTabs.shop_type 認(見 工具/商店.py);
+// 認不出來的歸「未分類」並列候選,不硬塞。
+
+// 活動期:運營活動是一期一期推的。期號來自 PloyResources.o_type,
+// 跟 CDN 活動圖的資料夾號(activitycommonplot/10020)對得上才採信。
+async function renderPeriod(){
+  const d=await other('活動期');
+  const list=(d.項目||[]).filter(x=>x.是否為活動期!==false);
+  const grp=(d.項目||[]).filter(x=>x.是否為活動期===false);
+  let h=`<div class="hdr"><h2>活動期</h2><span class="chip">${list.length} 期</span>
+    <span class="chip acc">${list.reduce((a,x)=>a+((x.小活動||[]).length),0)} 個小活動</span></div>
+    <p class="sub">${esc(d.說明||'')}</p><section>`;
+  for(const x of list){
+    const subs=x.小活動||[], res=x.活動道具||[];
+    h+=`<details><summary><b>${esc(x.名稱)}</b>
+      ${subs.map(sb=>`<span class="chip acc">${esc(sb.名稱)}</span>`).join('')}
+      ${(x.道具數??res.length)?`<span class="chip">${x.道具數??res.length} 種活動道具</span>`:''}
+      ${(x.綁定限定招募||[]).length?`<span class="chip acc">綁定限定招募</span>`:''}</summary>
+      ${(x['這一期的小活動']||[]).length?`<h4 style="margin:10px 0 6px">這一期的小活動
+        <small>${x['這一期的小活動'].length} 個</small></h4>
+        <p class="sub">${esc(x['小活動怎麼認的']||'')}</p>
+        <div class="imgs">${x['這一期的小活動'].map(b=>`<figure>
+          ${b.圖片?`<img src="圖片/活動標題/${encodeURIComponent(b.名稱)}.png" alt="${esc(b.名稱)}" loading="lazy">`:''}
+          <figcaption>${esc(b.名稱)} <span class="sub">${esc(b.系統||'')}</span></figcaption></figure>`).join('')}</div>`:''}
+      ${subs.length?`<div class="imgs">${subs.map(sb=>
+        `<figure><img src="圖片/活動標題/${encodeURIComponent(sb.名稱)}.png" alt="${esc(sb.名稱)}" loading="lazy">
+         <figcaption><a href="#${encodeURIComponent(sb.名稱)}">${esc(sb.名稱)}</a></figcaption></figure>`).join('')}</div>`:''}
+      ${(x.綁定限定招募||[]).length?`<div class="grid">${kv('綁定限定招募',
+        x.綁定限定招募.map(t=>`<span class="tag">${esc(t)}</span>`).join(''))}</div>`:''}
+      ${res.length?tableFromObjs(res.map(r=>({名稱:r.名稱,編號:r.編號,說明:r.說明}))):''}
+    </details>`;
+  }
+  h+=`</section>`;
+  if(grp.length) h+=`<section><h3>不是「期」的資源分組 <small>${grp.length} 組</small></h3>
+    <p class="sub">這些號碼小於 10000,是常駐系統自己的資源分組(珍禮卡、釣魚積分、UR 招募進度),
+      不是一期運營活動 —— 期號是五位數那批才跟 CDN 活動圖的資料夾號對得上。</p>
+    ${tableFromObjs(grp.map(x=>({分組碼:x.分組碼,內容:(x.活動道具||[]).map(r=>r.名稱).join('、')})))}</section>`;
+  return h;
+}
+
+// 招募期:限定招募一期一個名字與一套美術。
+// 跟「招募」那頁不一樣 —— 那頁是池的種類(夥伴邀約、典藏邀約…),這頁是每一期叫什麼。
+async function renderPoolPeriod(){
+  const d=await other('招募期');
+  const list=d.項目||[];
+  const grp=k=>list.filter(x=>x.產出類型===k);
+  let h=`<div class="hdr"><h2>招募期</h2><span class="chip">${list.length} 期</span></div>
+    <p class="sub">${esc(d.說明||'')}</p>`;
+  for(const k of ['夥伴','寵物']){
+    const v=grp(k); if(!v.length) continue;
+    h+=`<section><h3>${k}池 <small>${v.length} 期</small></h3><div class="imgs">${v.map(x=>`
+      <figure><img src="圖片/活動標題/${encodeURIComponent(x.資料夾||x.名稱)}.png"
+        alt="${esc(x.名稱)}" loading="lazy"><figcaption>${esc(x.名稱)}
+        <span class="sub">#${esc(x.期編號||'')}</span>
+        ${x.綁定限定夥伴?`<div class="sub">限定 ${esc(x.綁定限定夥伴.名稱)}</div>`:''}
+        ${x.推薦珍寶?`<div class="sub" title="${esc(x.推薦珍寶.依據||'')}">推薦珍寶 ${esc(x.推薦珍寶.名稱)}</div>`:''}
+        </figcaption></figure>`).join('')}</div>
+      ${v.some(x=>x.綁定限定夥伴)?tableFromObjs(v.filter(x=>x.綁定限定夥伴).map(x=>({
+        期:x.名稱, 限定夥伴:x.綁定限定夥伴.名稱, 推薦珍寶:(x.推薦珍寶||{}).名稱||'—',
+        推薦屬性:((x.夥伴的推薦屬性||{}).優先序||[]).slice(0,5).map(p=>p.名稱||('#'+p.編號)).join('、')||'—'
+      }))):''}</section>`;
+  }
+  const noPet=(list.find(x=>x.推薦寵物為什麼是空的)||{}).推薦寵物為什麼是空的;
+  h+=`<p class="sub">每一期的卡池名單由伺服器下發,client 設定表只有池種類、沒有期名單 ——
+    所以這裡只有期名、綁定的限定夥伴與推薦珍寶,沒有完整名單。<br>
+    限定夥伴與推薦珍寶來自 <code>PloyRecruitTemplate</code>(<code>mid</code> 就是期號,
+    <code>relate_id</code> 是夥伴、<code>s_guardian</code> 是珍寶);
+    推薦屬性來自 <code>Retinue.gem_rec</code>,照順序就是優先序。<br>
+    ${esc(noPet||'')}</p>`;
+  return h;
+}
+
+// 系統:同一套 UI 底下的數個項目(choosecard 那 6 張儲值卡、feastimg 那 8 章…)。
+// 遊戲沒有給這一套一個共同名字,所以用資產目錄名,不自己編一個。
+async function renderSystems(){
+  const d=await other('系統');
+  const list=d.項目||[];
+  let h=`<div class="hdr"><h2>系統</h2><span class="chip">${list.length} 套</span>
+      <span class="chip acc">${list.reduce((a,x)=>a+(x.項目數||0),0)} 個項目</span></div>
+    <p class="sub">這些是同一套介面底下的數個項目,不是各自獨立的活動 ——
+      判斷依據是它們共用同一個資產目錄。遊戲沒給這一套共同名字,所以標題用資產目錄名。</p><section>`;
+  for(const x of list){
+    h+=`<details><summary><b>${esc(x.名稱)}</b>
+      <span class="chip">${x.項目數} 個</span>
+      ${(x.項目||[]).slice(0,4).map(b=>`<span class="chip acc">${esc(b.名稱)}</span>`).join('')}</summary>
+      <p class="sub">${esc(x.為什麼沒有中文名||'')}</p>
+      <div class="imgs">${(x.項目||[]).map(b=>`<figure>
+        ${b.圖片?`<img src="圖片/活動標題/${encodeURIComponent(b.名稱)}.png" alt="${esc(b.名稱)}" loading="lazy">`:''}
+        <figcaption>${esc(b.名稱)}${b.期號?` <span class="chip">第 ${esc(b.期號)} 期</span>`:''}</figcaption>
+      </figure>`).join('')}</div></details>`;
+  }
+  return h+`</section>`;
+}
+
+// 素材庫:挖出來的東西全部列在這裡,一個都不丟,一個一個整理。
+// 機械歸類只分得出結構關係;「獨立活動 / 玩法內的活動 / 玩法中的玩法 / 新手活動」
+// 那一層要玩過才知道,所以沒點名過的都標「待確認」。
+async function renderLibrary(){
+  const d=await other('素材庫');
+  const list=d.項目||[];
+  const all=list.flatMap(x=>(x.讀出的名字||[]).map(b=>({...b,資產目錄:x.資產目錄,圖庫張數:x.圖庫張數})));
+  const by={}; for(const b of all)(by[b.使用者分類||'待確認']=by[b.使用者分類||'待確認']||[]).push(b);
+  let h=`<div class="hdr"><h2>素材庫(待整理)</h2>
+      <span class="chip">${list.length} 個資產目錄</span>
+      <span class="chip">${all.length} 個名字</span>
+      <span class="chip acc">${(by['待確認']||[]).length} 個待確認</span></div>
+    <p class="sub">${esc(d.說明||'')}
+      機械歸類只分得出結構關係(跟誰共用目錄、在誰底下、哪一期);
+      <b>獨立活動 / 玩法內的活動 / 玩法中的玩法 / 新手活動</b> 那一層要玩過才知道,
+      所以只有被點名過的才填,其餘都是「待確認」。</p>`;
+  for(const k of (d.四分法||Object.keys(by))){
+    const v=by[k]||[]; if(!v.length) continue;
+    h+=`<section><h3>${esc(k)} <small>${v.length} 個</small></h3>
+      ${tableFromObjs(v.map(b=>({
+        名稱:b.名稱, 機械歸類:b.機械歸類||'—', 歸屬:b.歸屬||'—',
+        期號:b.期號||'—', 現在落在:b.現在落在||'(還沒放)',
+        圖:b.圖庫張數||0, 資產目錄:b.資產目錄.replace('assets/arts/ui/img/','')})))}</section>`;
+  }
+  return h;
+}
+
+// 夢魘圖鑑。遊戲自己就有一本「夢魘錄」(NightmareCodex),每隻三段故事。
+// 圖片編號在 `source` 不是 `icon`(icon 整欄是空的),而且同一張圖
+// 不同系統會配不同名字,所以附「各系統怎麼叫它」,不挑一個當標準答案。
+async function renderNightmare(){
+  const d=await codex('夢魘');
+  const list=d.夢魘||[];
+  let h=`<div class="hdr"><h2>夢魘</h2><span class="chip">${d.數量} 隻</span>
+      <span class="chip acc">${d.有圖} 隻有圖</span></div>
+    <p class="sub">${esc(d.說明||'')}</p>
+    <section>${searchBox('搜尋夢魘 / 特性 / 故事…')} <span class="codex-count sub"></span>`;
+  for(const x of list){
+    const k=[x.名稱,x.特性||'',...(x.故事||[]).map(s=>s.標題+s.內文)].join(' ').toLowerCase();
+    h+=`<details data-k="${esc(k)}"><summary>
+      ${(x.各版本的圖||{}).頭像?`<img class="ficon" src="圖片/夢魘_頭像/${x.圖片編號}.png" alt="" loading="lazy">`:''}
+      <b>${esc(x.名稱)}</b>
+      ${x.特性?`<span class="chip acc">${esc(x.特性)}</span>`:''}
+      ${x.稱號?`<span class="chip">${esc(x.稱號)}</span>`:''}
+      ${x.故事段數?`<span class="chip">${x.故事段數} 段故事</span>`:'<span class="chip">只有美術</span>'}</summary>
+      ${x['完整素體與動畫從哪來']?`<p class="sub">${esc(x['完整素體與動畫從哪來'])}</p>`:''}
+      ${x.名稱待確認?`<p class="sub">⚠ ${esc(x['為什麼沒有名字']||'')}</p>`:''}
+      ${x.動畫?`<p class="sub">🎬 有 idle 動畫(spine 渲染,透明背景)。
+        動畫沒有上網站,檔案在 <code>素材/夢魘/${esc(x.名稱)}/動畫.webm</code></p>`:''}
+      <div class="imgs">${Object.keys(x.各版本的圖||{}).map(role=>`
+        <figure><img src="圖片/夢魘_${encodeURIComponent(role)}/${x.圖片編號}.png"
+          alt="${esc(x.名稱)}" loading="lazy">
+        <figcaption>${esc(role)}<div class="sub">${esc((x.版本說明||{})[role]||'')}</div></figcaption>
+        </figure>`).join('')}</div>
+      ${(x.故事||[]).map(sg=>`<section><h4>${esc(sg.標題)}</h4>
+        <p class="sub" style="white-space:pre-wrap">${esc(sg.內文)}</p>
+        <div class="grid">${kv('解鎖消耗',esc(sg.解鎖消耗||'—'))}${kv('解鎖獎勵',esc(sg.解鎖獎勵||'—'))}</div>
+      </section>`).join('')}
+      ${x.最低級數值?`<div class="grid">${kv('代表等級',x.最低級數值.等級??'—')}</div>
+        ${tableFromObjs((x.最低級數值.屬性||[]).map(p=>({屬性:p.名稱||('#'+p.編號),數值:p.數值})))}
+        <p class="sub">${esc(x.數值說明||'')}</p>`:''}
+      ${x.各系統怎麼叫它?`<h4 style="margin:12px 0 6px">各系統怎麼叫它</h4>
+        <p class="sub">${esc(x['為什麼一張圖好幾個名字']||'')}</p>
+        ${tableFromObjs(Object.entries(x.各系統怎麼叫它).map(([k2,v])=>({系統:k2,叫法:v.join('、')})))}`:''}
+    </details>`;
+  }
+  return h+`</section>`;
+}
+async function renderShops(){
+  const d=await other('商店');
+  const list=d.項目||[];
+  const tot=list.reduce((a,x)=>a+(x.商品數||0),0);
+  let h=`<div class="hdr"><h2>商店</h2><span class="chip">${list.length} 間</span>
+      <span class="chip">${tot} 件商品</span></div><p class="sub">${esc(d.說明)}</p>`;
+  for(const sh of list){
+    const unk=sh.名稱==='未分類';
+    h+=`<section><h3>${esc(sh.名稱)} <small>${sh.商品數} 件</small>
+      ${sh.所屬玩法編號?`<span class="chip">玩法 #${esc(sh.所屬玩法編號)}</span>`:''}</h3>
+      ${unk?`<p class="sub">這些認不出是哪一間 —— ShopDefine 沒有 shop_id,
+        <code>type</code> 對到多個分頁而消耗的貨幣也分不開。每件都列了候選。</p>`:''}
+      ${tableFromObjs((sh.商品||[]).map(g=>({
+        商品:g.商品, 售價:g.售價, 原價:g.原價||'—', 折扣:g.折扣||'—',
+        每次上限:g.每次上限??'—',
+        購買上限:g.購買上限原碼||'—',
+        條件:[g.購買條件||g.購買條件原碼,g.顯示條件||g.顯示條件原碼].filter(Boolean).join(' / ')||'—',
+        ...(unk?{候選:(g.候選商店||[]).join('、')||'—'}:{}),
+      })))}</section>`;
+  }
+  return h+`<p class="sub"><b>CB_&lt;n&gt; 已經解開 = 心醫 n 級</b> —— 四條交叉證據:
+    能力「無懈可擊」<code>CB_135</code> 的取得說明寫「心醫等級技能選擇獲得」;
+    心醫等級是 1~296 而能力的 CB_ 範圍 1~292 剛好落在裡面;
+    裝備第一階全是 <code>CB_1</code>、第二階 <code>CB_10</code>;
+    精粹商城越高階的貨 CB_ 越大。
+    其餘前綴(<code>AAD_</code> <code>DG_</code> <code>IQ_</code>)和購買上限的
+    <code>0_3_1</code> 三段式找不到對照表,原樣列出不猜。</p>`;
+}
+
+// 一輪活動的排程:哪些小活動、各開第幾天到第幾天。
+// 這是使用者說的「活動」(主畫面圓鈕彈窗那種),本來完全沒上站。
+async function renderPloy(){
+  const d=await other('活動排程');
+  const span=d.週期天數||14, list=d.項目||[];
+  const grp=d.主活動||{};
+  let h=`<div class="hdr"><h2>活動排程</h2><span class="chip">${span} 天一輪</span>
+      <span class="chip">${list.length} 個小活動</span>
+      <span class="chip acc">${Object.keys(grp).length} 個主活動</span></div>
+    <p class="sub">${esc(d.說明)}</p>`;
+  if(Object.keys(grp).length) h+=`<section><h3>這一輪有哪些活動、各自底下有什麼</h3>
+    <p class="sub">${esc(d.歸屬說明||'')}</p>
+    ${Object.entries(grp).map(([k,v])=>`<div style="margin:6px 0">
+      <b>${esc(k)}</b> ${v.map(x=>`<span class="tag">${esc(x)}</span>`).join('')}</div>`).join('')}</section>`;
+  h+=`<section><table><thead><tr><th>小活動</th><th>開放</th><th style="width:46%">第 0 天 → 第 ${span} 天</th><th>領獎截止</th></tr></thead><tbody>`;
+  for(const x of list){
+    const a=x.第幾天開始, b=x.第幾天結束;
+    const l=Math.round(a/span*100), w=Math.max(2,Math.round((b-a)/span*100));
+    h+=`<tr><td><b>${esc(x.子項||x.名稱)}</b>${x.全程?'<span class="chip">全程</span>':''}
+      ${x.屬於哪個活動&&x.屬於哪個活動!==x.名稱?`<div class="sub">屬於 ${esc(x.屬於哪個活動)}</div>`:''}
+      ${x['這個分類碼是什麼']?`<div class="sub">分類碼 ${x.內部分類碼} = ${esc(x['這個分類碼是什麼'])}</div>`:''}</td>
+      <td>第 ${a}~${b} 天</td>
+      <td><div class="bar"><span style="left:${l}%;width:${w}%"></span></div></td>
+      <td class="sub">第 ${x['領獎截止(第幾天)']} 天</td></tr>`;
+  }
+  return h+`</tbody></table></section>
+    <p class="sub">天數是相對的(第 0 天 = 這一輪開始),實際日期由伺服器下發,設定表裡沒有。
+      分類碼(<code>ploy_type</code>)能從 PloyMenu / PloyFixedTheme 對出名字的才翻,
+      對不出來的留原碼。<b>client 裡只有當前這一輪</b>,歷史各期的組成沒有。</p>`;
 }
 
 // 資料檢查:把一筆資料的每個欄位原樣攤開,不挑、不美化。
@@ -724,6 +1394,8 @@ const TPL={
     徽章:x=>[x.稀有度,x.品質,x.限定?'限定':null],
     立繪:x=>x.立繪,
     區塊:[
+      {標題:'立繪動畫',型:'文字',
+        值:x=>x.動畫?`有 idle 動畫(spine 渲染,45fps,透明背景)。動畫沒有上網站,檔案在 素材/夥伴/${x.名稱}/動畫.webm`:null},
       {標題:'介紹',型:'文字',值:x=>x.介紹},
       {標題:'基本',型:'kv',欄:[['編號','id'],['稀有度','稀有度'],['品質','品質'],
         ['職業類型','職業類型'],['定位','定位'],['突破上限','突破上限'],
@@ -737,6 +1409,14 @@ const TPL={
         列:s=>({名稱:s.名稱,類型:s.類型,解鎖:s.解鎖階?`突破${s.解鎖階}階`:'初始',說明:s.說明})},
       {標題:'好感獎勵',型:'表格',值:x=>x.好感獎勵,
         列:r=>({好感度:r.好感度,等級:r.等級??'—',獎勵:r.獎勵||'—',語音:r.語音||''})},
+      // 傳記的完整對白(6612 句)只放在 素材/夥伴/<名>/傳記/*.md,網頁這邊只列章節
+      {標題:'傳記',型:'表格',值:x=>x.傳記,
+        列:(b,i)=>({章:i+1,標題:b.章名,解鎖:`好感度 ${b.解鎖好感度}`,摘要:b.摘要||'—',
+          對白:b.對白句數?`${b.對白句數} 句`:'沒抓到'})},
+      {標題:'推薦搭配',型:'表格',值:x=>x.推薦搭配,
+        列:m=>({組合:m.組合名,屬性:m.屬性||`原碼 ${m.屬性碼}`,
+          寵物:(m.推薦寵物||[]).map(z=>z.名稱).join('、')||'—',
+          珍寶:m.推薦珍寶?.名稱||'—',達成獎勵:m.達成獎勵||'—'})},
     ],
   },
 };
@@ -799,13 +1479,17 @@ async function renderRes(){
   const d=await codex('資源');
   let h=`<div class="hdr"><h2>資源</h2><span class="chip">${d.數量} 種</span></div><p class="sub">${esc(d.說明)}</p>`;
   h+=`<section>${searchBox('搜尋資源名 / 說明 / 獲取途徑…')} <span class="codex-count sub"></span>
-    <table><thead><tr><th>名稱</th><th>品質</th><th>說明</th><th>獲取途徑</th></tr></thead><tbody>`;
+    <table><thead><tr><th>名稱</th><th>說明</th><th>獲取途徑</th></tr></thead><tbody>`;
   for(const r of d.資源){
-    const way=(r.獲得途徑||{}).遊戲標示||r.獲取;   // 素材是巢狀的,舊的「整理」格式是平的
+    const way=iWay(r)||r.獲取;   // 素材是巢狀的,舊的「整理」格式是平的;活動那條也要併進來
     const k=[r.名稱,r.品質,r.說明||'',gwText(way)].join(' ').toLowerCase();
-    const pic=r.圖?`<img src="${enc('圖片/'+(d.圖片||{}).資料夾+'/'+r.圖)}?v=${(d.圖片||{}).版本||''}" alt="" style="height:28px;vertical-align:middle;margin-right:6px">`:'';
-    h+=`<tr data-k="${esc(k)}"><td>${pic}<b>${esc(r.名稱)}</b></td><td>${esc(r.品質)}</td>
-      <td class="sub">${rich((r.說明||'—').replace(/\n/g,' '))}</td><td>${gw(way)||'<span class="sub">—</span>'}</td></tr>`;
+    // 品質改用品質框畫,不用文字。表格裡的圖維持原來的 28px 行內大小,
+    // 不要用圖鑑那個 38px 的 .thm,不然每一列都被撐高、版面會跑掉。
+    const plate=PLATE(r.品質);
+    const pic=r.圖?`<span class="respic"${plate?` style="background-image:${plate}"`:''} title="${esc(r.品質||r.沒有固定品質的原因||'')}"><img src="${enc('圖片/'+(d.圖片||{}).資料夾+'/'+r.圖)}?v=${(d.圖片||{}).版本||''}" alt="" loading="lazy"></span>`:'';
+    h+=`<tr data-k="${esc(k)}"><td><span class="rescell">${pic}<b>${esc(r.名稱)}</b>${
+      r.沒有固定品質的原因?`<small class="sub" title="${esc(r.沒有固定品質的原因)}">無固定品質</small>`:''}</span></td>
+      <td class="sub">${rich((r.說明||'—').replace(/\n/g,' '))}</td><td>${gw(way)||(iNote(r)?`<span class="sub" title="${esc(iNote(r))}">查無(已掃過全部設定表)</span>`:'<span class="sub">—</span>')}</td></tr>`;
   }
   return h+`</tbody></table></section>`;
 }
@@ -816,9 +1500,9 @@ async function renderEquip(){
   h+=`<section>${searchBox('搜尋裝備 / 部位 / 品質…')} <span class="codex-count sub"></span>`;
   for(const e of d.裝備){
     const k=[e.名稱,e.部位,e.品質,e.說明||''].join(' ').toLowerCase();
-    h+=`<details data-k="${esc(k)}"><summary>${thumb(d.圖片,e.圖,e.品質,e.名稱)}<b>${esc(e.名稱)}</b><span class="chip">${esc(e.部位)}</span>${e.進階為?`<span class="chip">進階為 ${esc(e.進階為)}</span>`:''}</summary>
+    h+=`<details data-k="${esc(k)}"><summary>${thumb(d.圖片,e.圖,e.品質,e.名稱)}<b>${esc(e.名稱)}</b><span class="chip">${esc(e.部位)}</span>${e.可裝備等級?`<span class="chip">${esc(e.可裝備等級)}</span>`:''}${e.進階為?`<span class="chip">進階為 ${esc(e.進階為)}</span>`:''}</summary>
       ${e.說明?`<p class="sub">${esc(e.說明)}</p>`:''}
-      ${e.獲取?`<div class="grid">${kv('獲取',gw(e.獲取))}</div>`:''}
+      <div class="grid">${kv('獲取',gw(e.獲取)||(e.反查結論?`<span class="sub" title="${esc(e.反查結論)}">查無(已掃過全部設定表)</span>`:'—'))}</div>
       ${tableFromObjs((e.星級||[]).map(s=>({星:s.星,基礎屬性:s.基礎屬性||'—',強化成長:s.強化成長||'—','滿強化(300級)':s['滿強化(300級)']||'—',特殊屬性:s.特殊屬性||'—',寶石孔:s.寶石孔,升星消耗:s.升星消耗||'—',分解返還:s.分解返還||'—'})))}</details>`;
   }
   h+=`</section><section><h3>套裝加成</h3>${tableFromObjs(d.套裝加成||[])}</section>`;
@@ -867,8 +1551,38 @@ async function renderCodexHub(name){
 const iTab=x=>(x.類型||{}).背包分頁||'';
 const iQ=x=>(x.類型||{}).品質||'';
 const iCat=x=>(x.類型||{}).主類型||x.分類||'';
-const iWay=x=>(x.獲得途徑||{}).遊戲標示||null;
+// 獲得途徑有三條:遊戲自己標示的、反查設定表的、以及活動那邊人工校對的。
+// 運營活動的獎勵由伺服器下發,client 設定表查不到,所以活動那條一定要併進來。
+const iWay=x=>{
+  const g=x.獲得途徑||{};
+  const a=(g.活動||[]).map(n=>({名稱:n,說明:'活動獎勵(資料來自活動整理)'}));
+  // 正向索引反轉過來的來源。**信心度要跟著顯示** —— 來源名多半是推論的,
+  // 寫成「鎮魘塔(推測)」而不是「鎮魘塔」,滑過去看得到依據。
+  const f=(g.正向來源||[]).filter(v=>v.來源||v.候選名).map(v=>({
+    名稱: v.來源 ? (v.信心==='強推論' ? v.來源+'(推測)' : v.來源)
+                : v.候選名+'(待確認)',
+    說明: [v.信心, ...(v.證據||[]), `來自 ${v.來源表}.${v.欄位},${v.筆數} 筆`].join('\n'),
+  }));
+  const all=[...(g.遊戲標示||[]),...a,...f];
+  const seen=new Set();
+  const uniq=all.filter(v=>!seen.has(v.名稱)&&seen.add(v.名稱));
+  return uniq.length?uniq:null;
+};
 const iSell=x=>(x.價格||{}).售出||'';
+// 查不到不要留白 —— 寫出「查過了,真的沒有」跟為什麼。空白看起來像還沒做。
+const iNote=x=>(x.獲得途徑||{}).反查結論||'';
+// 來源表認得出名字的才算「有來源」;只剩表名的那種不算,免得看起來像已經查到了
+const iSrcTables=x=>{
+  const f=(x.獲得途徑||{}).正向來源||[];
+  return f.filter(v=>!v.來源&&!v.候選名).map(v=>v.來源表);
+};
+const wayOrNote=x=>{
+  const w=gw(iWay(x));
+  const t=iSrcTables(x);
+  if(w) return w+(t.length?`<span class="sub" title="這些表會發這個東西,但還沒查到它們屬於哪個玩法/活動:\n${esc(t.join('、'))}">+${t.length} 個來源表待命名</span>`:'');
+  if(t.length) return `<span class="sub" title="${esc(t.join('、'))}">只知道是哪張表發的(${t.length} 張),還沒查到那是哪個玩法</span>`;
+  return iNote(x)?`<span class="sub" title="${esc(iNote(x))}">查無(已掃過全部設定表)</span>`:'—';
+};
 
 async function renderItemCodex(){
   const d=await codex('道具');
@@ -894,7 +1608,7 @@ async function renderItemCodex(){
         <div class="nm">${esc(it.名稱)}</div>
         <div class="tags"><span class="chip">${esc(iCat(it))}</span>${iSell(it)?`<span class="chip">賣 ${esc(iSell(it))}</span>`:''}</div>
         <div class="ds">${rich(it.說明||'—')}</div>
-        ${iWay(it)?`<div class="ds"><b>獲取</b> ${gw(iWay(it))}</div>`:''}</div></div>`;
+        <div class="ds"><b>獲取</b> ${wayOrNote(it)}</div></div></div>`;
     }
     h+=`</div>`;
   }
@@ -910,7 +1624,7 @@ async function renderItems(){
     <table><thead><tr><th>名稱</th><th>分頁</th><th>分類</th><th>品質</th><th>說明</th><th>獲取</th></tr></thead><tbody>`;
   for(const it of d.道具){
     const k=[it.名稱,iTab(it),iCat(it),iQ(it),it.說明||'',gwText(iWay(it))].join(' ').toLowerCase();
-    h+=`<tr data-k="${esc(k)}"><td>${esc(it.名稱)}</td><td>${esc(iTab(it))}</td><td>${esc(iCat(it))}</td><td>${esc(iQ(it))}</td><td class="sub">${rich((it.說明||'').replace(/\n/g,' '))}</td><td class="sub">${gw(iWay(it))||'—'}</td></tr>`;
+    h+=`<tr data-k="${esc(k)}"><td>${esc(it.名稱)}</td><td>${esc(iTab(it))}</td><td>${esc(iCat(it))}</td><td>${esc(iQ(it))}</td><td class="sub">${rich((it.說明||'').replace(/\n/g,' '))}</td><td class="sub">${wayOrNote(it)}</td></tr>`;
   }
   return h+`</tbody></table></section>`;
 }
@@ -921,7 +1635,8 @@ async function show(id){
   document.querySelectorAll('.nav a').forEach(a=>a.classList.toggle('active',a.dataset.id===id));
   $('#side').classList.remove('open');
   try{
-    if(id.startsWith('cx_')) v.innerHTML=await renderCodexHub(decodeURIComponent(id.slice(3)));
+    if(id==='home') v.innerHTML=await renderHome();
+    else if(id.startsWith('cx_')) v.innerHTML=await renderCodexHub(decodeURIComponent(id.slice(3)));
     else if(id==='overview') v.innerHTML=await renderOverview();
     else if(id==='cult') v.innerHTML=await renderCult();
     else if(id==='partner') v.innerHTML=await renderPartners();
@@ -936,10 +1651,23 @@ async function show(id){
     else if(id==='deco') v.innerHTML=await renderDeco();
     else if(id==='face') v.innerHTML=await renderFace('貼圖');
     else if(id==='emo') v.innerHTML=await renderFace('表情符號');
+    else if(id==='func') v.innerHTML=await renderFunc();
+    else if(id==='recruit') v.innerHTML=await renderRecruit();
+    else if(id==='rules') v.innerHTML=await renderRules();
+    else if(id==='ploy') v.innerHTML=await renderPloy();
+    else if(id==='period') v.innerHTML=await renderPeriod();
+    else if(id==='pools') v.innerHTML=await renderPoolPeriod();
+    else if(id==='systems') v.innerHTML=await renderSystems();
+    else if(id==='lib') v.innerHTML=await renderLibrary();
+    else if(id==='shops') v.innerHTML=await renderShops();
+    else if(id==='imprest') v.innerHTML=await renderImprest();
+    else if(id==='family') v.innerHTML=await renderFamily();
     else if(id.startsWith('st_')) v.innerHTML=await renderStickerTheme(decodeURIComponent(id.slice(3)));
     else if(id.startsWith('sa_')) v.innerHTML=await renderStickerAlbum(id.slice(3));
     else if(id.startsWith('g_')) v.innerHTML=await renderGrowth(id.slice(2));
     else if(id==='itemdex') v.innerHTML=await renderItemCodex();
+    else if(id==='nightmare') v.innerHTML=await renderNightmare();
+    else if(id==='hero') v.innerHTML=await renderHero();
     else if(id==='res') v.innerHTML=await renderRes();
     else if(id.startsWith('raw_')) v.innerHTML=await renderRaw(decodeURIComponent(id.slice(4)));
     else if(id.startsWith('detail/')){const [,c,w]=id.split('/');v.innerHTML=await renderDetail(decodeURIComponent(c),decodeURIComponent(w));}
@@ -961,13 +1689,15 @@ function buildNav(filter=''){
   const sec=(k,title,body,n)=>!body?'':`<details class="nav-sec" ${f||NAVOPEN(k)?'open':''} ontoggle="navToggle(this,'${k}')">
     <summary>${title}${n!=null?`<small>${n}</small>`:''}</summary>${body}</details>`;
   const acts=INDEX.filter(a=>!f||(a.名稱+a.資料夾+(a.分類||'')+(a.類型||'')).toLowerCase().includes(f));
-  let h=sec('act','活動',acts.map(a=>`<a href="#${encodeURIComponent(a.資料夾)}" data-id="${esc(a.資料夾)}"><span>${esc(a.名稱)}</span><small>${esc(a.分類||'')}</small></a>`).join(''),acts.length);
+  let h=`<a href="#home" data-id="home" class="nav-home"><span>首頁</span></a>`;
+  h+=sec('act','活動',acts.map(a=>`<a href="#${encodeURIComponent(a.資料夾)}" data-id="${esc(a.資料夾)}"><span>${esc(a.名稱)}</span><small>${esc(a.分類||'')}</small></a>`).join(''),acts.length);
   h+=sec('codex','圖鑑',CODEX_NAV.filter(keep).map(link).join(''));
   h+=sec('growth','養成',GROWTH_PAGES.filter(keep).map(link).join(''));
   h+=sec('raw','資料檢查',Object.keys(RAWSRC)
     .filter(c=>!f||c.toLowerCase().includes(f))
     .map(c=>`<a href="#raw_${encodeURIComponent(c)}" data-id="raw_${esc(c)}"><span>${esc(c)}</span></a>`).join(''));
-  h+=sec('other','其他',[{id:'overview',name:'總覽與規則'},{id:'item',name:'道具查詢(純表格)'},{id:'doc',name:'欄位說明'}].filter(keep).map(link).join(''));
+  h+=sec('other','其他',[{id:'overview',name:'總覽與規則'},{id:'func',name:'玩法'},{id:'recruit',name:'招募'},
+    {id:'ploy',name:'活動排程'},{id:'period',name:'活動期'},{id:'pools',name:'招募期'},{id:'systems',name:'系統'},{id:'lib',name:'素材庫(待整理)'},{id:'shops',name:'商店'},{id:'imprest',name:'儲值'},{id:'family',name:'家族'},{id:'rules',name:'規則說明'},{id:'item',name:'道具查詢(純表格)'},{id:'doc',name:'欄位說明'}].filter(keep).map(link).join(''));
   $('#nav').innerHTML=h;
   const cur=decodeURIComponent(location.hash.slice(1));
   document.querySelectorAll('.nav a').forEach(a=>a.classList.toggle('active',a.dataset.id===cur));
@@ -978,9 +1708,11 @@ function buildNav(filter=''){
   buildNav();
   $('#q').addEventListener('input',e=>buildNav(e.target.value));
   $('#menu').addEventListener('click',()=>$('#side').classList.toggle('open'));
-  const go=()=>show(decodeURIComponent(location.hash.slice(1))||INDEX[0].資料夾);
+  const go=()=>show(decodeURIComponent(location.hash.slice(1))||'home');
   if(location.search.includes('print')) document.body.classList.add('print');
   window.addEventListener('hashchange',go); go();
+  // ?openall:把所有 <details> 展開,給截圖驗版用(浮動立繪疊在一起那個 bug 就是這樣抓到的)
+  if(location.search.includes('openall')) setTimeout(()=>document.querySelectorAll('details').forEach(d=>d.open=true),1200);
 })();
 </script>
 </body>
