@@ -43,7 +43,7 @@ select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .bars{display:flex;flex-direction:column;gap:9px;margin:4px 0 18px}
 .bar{display:grid;grid-template-columns:62px 1fr 54px;align-items:center;gap:10px;font-size:.86rem}
 .bar .track{height:14px;border-radius:7px;background:var(--surface2);overflow:hidden;border:1px solid var(--line)}
-.bar .fill{height:100%;border-radius:7px 0 0 7px}
+.bar .fill{display:block;height:100%;min-width:2px;border-radius:7px 0 0 7px;transition:width .2s}
 .bar .pct{text-align:right;font-family:var(--fdisp);font-variant-numeric:tabular-nums;color:var(--muted)}
 .cap{font-size:.9rem;font-weight:600;margin:0 0 8px;color:var(--muted)}
 .cand h4{font-size:.9rem;font-weight:600;margin:0 0 10px;color:var(--muted)}
@@ -73,7 +73,7 @@ select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
     </div>
     <div class="res" id="res"></div>
   </div>
-  <p class="note">資料取自遊戲設定表 PloyRaccoonTravel{Goods,Place,Photo}。稀有度長條是設定表權重強度（非最終機率）；「同級約 x%」是同一稀有度內用基礎權重算的相對機率。跨槽疊加公式與最終抽取在伺服器端，未公開。</p>
+  <p class="note">資料取自遊戲設定表 PloyRaccoonTravel{Goods,Place,Photo}。機率估算法：每張照片有效權重＝基礎權重 ×（1＋配裝對該稀有度的加成÷100，口糧+20、每物件+100），同地點內正規化即為各張機率。跨槽實際疊加公式與最終抽取在伺服器端、未公開，數字為估計參考。</p>
 </div>
 <script>
 const RN={1:"普通",2:"精緻",3:"稀有"};
@@ -118,25 +118,30 @@ function render(){
   const guide=GUIDE.find(g=>g.id==fGuide.value);
   const items=[fI1.value,fI2.value].filter(v=>v).map(v=>v==XINXIN.id?XINXIN:ITEM.find(i=>i.id==v));
   const w={1:0,2:0,3:0};w[food.t]+=20;items.forEach(it=>{if(!it.special)w[it.t]+=100;});
-  const total=w[1]+w[2]+w[3]||1;
+  const mult=t=>1+w[t]/100;            // 配裝對該稀有度的加成倍率（口糧+20、每物件+100）
   const hasXin=items.some(it=>it&&it.special);
   const placeTxt=guide.places.map(p=>PLACE[p]).join(" / ");
   const multi=guide.places.length>1;
+  const typeProb={1:0,2:0,3:0};         // 各稀有度估計抽中機率（跨地點平均）
   let cand="";
   guide.places.forEach(pid=>{
     const ph=PHOTO.filter(p=>p.p===pid);
+    let tot=0;ph.forEach(p=>tot+=p.bw*mult(p.t));
+    [1,2,3].forEach(t=>{
+      const et=ph.filter(p=>p.t===t).reduce((a,b)=>a+b.bw*mult(b.t),0);
+      typeProb[t]+=(et/tot)/guide.places.length;
+    });
     if(multi)cand+=`<h4 style="margin-top:10px">${PLACE[pid]}</h4>`;
     [1,2,3].forEach(t=>{
-      const grp=ph.filter(p=>p.t===t);const sum=grp.reduce((a,b)=>a+b.bw,0);
-      grp.forEach(p=>{
-        const within=Math.round(p.bw/sum*100);
+      ph.filter(p=>p.t===t).forEach(p=>{
+        const prob=Math.round(p.bw*mult(p.t)/tot*100);
         cand+=`<div class="photo${w[t]>0?' on':''}"><span class="rp r${t}">${RN[t]}</span>
           <span class="nm">${p.n}<small>#${p.id}</small></span>
-          <span class="od">同級約 ${within}%</span></div>`;
+          <span class="od">約 ${prob}%</span></div>`;
       });
     });
   });
-  const bar=t=>{const pct=Math.round(w[t]/total*100);
+  const bar=t=>{const pct=Math.round(typeProb[t]*100);
     return `<div class="bar"><span>${RN[t]}</span>
       <span class="track"><span class="fill" style="width:${pct}%;background:${RCOL[t]}"></span></span>
       <span class="pct">${pct}%</span></div>`;};
@@ -146,9 +151,9 @@ function render(){
       <div class="stat"><div class="l">林間珍草</div><div class="v">${food.min}–${food.max}</div></div>
       <div class="stat"><div class="l">前往地點</div><div class="v" style="font-size:1.1rem">${placeTxt}</div></div>
     </div>
-    <p class="cap">稀有度偏向（設定表權重占比）</p>
+    <p class="cap">各稀有度估計抽中機率${multi?"（兩地平均）":""}</p>
     <div class="bars">${bar(3)}${bar(2)}${bar(1)}</div>
-    <div class="cand"><h4>可能抽到的照片${multi?"（兩地各半機率）":""}　標亮＝你有偏向到的稀有度</h4>${cand}</div>
+    <div class="cand"><h4>可能抽到的照片${multi?"（每地點各半機率，下列為該地點內機率）":""}　標亮＝你有偏向到的稀有度</h4>${cand}</div>
     <div class="hint">${hasXin?'已帶 <b>尋新符</b>：可解鎖當地尚未取得的新照片。':'小提醒：帶 <b>尋新符</b> 可專門解鎖當地新照片。'}
     想高機率拿稀有照：選有 3 張稀有的 <b>晴沙椰灣／楓燈町</b>，配兩個偏稀有的物件。</div>`;
 }
