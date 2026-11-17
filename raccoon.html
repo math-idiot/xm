@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>小浣熊遊記 配方模擬器</title>
+<style>
+:root{
+  --bg:#eef2ec;--surface:#ffffff;--surface2:#f3f6f1;--ink:#1f2b24;--muted:#5e6d63;
+  --line:#d4ddd2;--accent:#3f7d5a;--herb:#3f7d5a;
+  --r1:#7d8c81;--r1bg:#eceee9;--r2:#3f7aa8;--r2bg:#e5eef5;--r3:#bb8a2a;--r3bg:#f6edd7;
+  --fdisp:"Space Grotesk",system-ui,sans-serif;
+  --fbody:"Inter","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#121814;--surface:#1c241f;--surface2:#222b25;--ink:#e7ede8;--muted:#9fb0a4;
+  --line:#2f3b33;--accent:#73bd93;--herb:#73bd93;
+  --r1:#9aa89e;--r1bg:#242c27;--r2:#6fa7d6;--r2bg:#1e2a33;--r3:#d7ab52;--r3bg:#2e2817;
+  color-scheme:dark;
+}}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--fbody);line-height:1.6;margin:0;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:720px;margin:0 auto;padding:28px max(16px,env(safe-area-inset-left,0px)) 56px}
+h1{font-family:var(--fdisp);font-size:1.5rem;font-weight:700;margin:0 0 4px}
+.sub{color:var(--muted);font-size:.9rem;margin:0 0 20px}
+.sim{background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.pick{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;padding:20px;background:var(--surface2);
+  border-bottom:1px solid var(--line)}
+@media(max-width:560px){.pick{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field label{font-size:.78rem;font-weight:600;color:var(--muted)}
+select{font-family:var(--fbody);font-size:.95rem;padding:10px 12px;border-radius:10px;
+  border:1px solid var(--line);background:var(--surface);color:var(--ink);width:100%}
+select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.res{padding:20px}
+.row{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:18px}
+.stat{flex:1 1 150px;min-width:140px;background:var(--surface2);border:1px solid var(--line);
+  border-radius:12px;padding:12px 14px}
+.stat .l{font-size:.74rem;color:var(--muted);font-weight:600}
+.stat .v{font-family:var(--fdisp);font-weight:700;font-size:1.35rem;margin-top:2px;font-variant-numeric:tabular-nums}
+.stat .v small{font-size:.8rem;font-weight:500;color:var(--muted)}
+.bars{display:flex;flex-direction:column;gap:9px;margin:4px 0 18px}
+.bar{display:grid;grid-template-columns:62px 1fr 54px;align-items:center;gap:10px;font-size:.86rem}
+.bar .track{height:14px;border-radius:7px;background:var(--surface2);overflow:hidden;border:1px solid var(--line)}
+.bar .fill{height:100%;border-radius:7px 0 0 7px}
+.bar .pct{text-align:right;font-family:var(--fdisp);font-variant-numeric:tabular-nums;color:var(--muted)}
+.cap{font-size:.9rem;font-weight:600;margin:0 0 8px;color:var(--muted)}
+.cand h4{font-size:.9rem;font-weight:600;margin:0 0 10px;color:var(--muted)}
+.photo{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;
+  padding:9px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;background:var(--surface)}
+.rp{font-size:.68rem;font-weight:700;padding:3px 8px;border-radius:20px;white-space:nowrap}
+.nm{font-weight:600;font-size:.95rem;min-width:0}
+.nm small{display:block;color:var(--muted);font-weight:400;font-size:.76rem}
+.od{font-family:var(--fdisp);font-variant-numeric:tabular-nums;font-size:.82rem;color:var(--muted);text-align:right}
+.rp.r1{background:var(--r1bg);color:var(--r1)}.rp.r2{background:var(--r2bg);color:var(--r2)}.rp.r3{background:var(--r3bg);color:var(--r3)}
+.photo.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.hint{font-size:.8rem;color:var(--muted);margin-top:14px;padding-top:14px;border-top:1px dashed var(--line)}
+.hint b{color:var(--herb)}
+.note{font-size:.76rem;color:var(--muted);margin-top:18px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>小浣熊遊記 配方模擬器</h1>
+  <p class="sub">選口糧、攻略和物件，看這一趟會得到什麼。</p>
+  <div class="sim">
+    <div class="pick">
+      <div class="field"><label for="s-food">出行口糧（必選）</label><select id="s-food"></select></div>
+      <div class="field"><label for="s-guide">旅行攻略（必選）</label><select id="s-guide"></select></div>
+      <div class="field"><label for="s-i1">特色物件 槽1（可選）</label><select id="s-i1"></select></div>
+      <div class="field"><label for="s-i2">特色物件 槽2（可選）</label><select id="s-i2"></select></div>
+    </div>
+    <div class="res" id="res"></div>
+  </div>
+  <p class="note">資料取自遊戲設定表 PloyRaccoonTravel{Goods,Place,Photo}。稀有度長條是設定表權重強度（非最終機率）；「同級約 x%」是同一稀有度內用基礎權重算的相對機率。跨槽疊加公式與最終抽取在伺服器端，未公開。</p>
+</div>
+<script>
+const RN={1:"普通",2:"精緻",3:"稀有"};
+const FOOD=[
+ {id:70141,n:"青蔬飯糰",h:2,min:50,max:65,t:1},{id:70142,n:"蜜漬果盒",h:2,min:50,max:65,t:2},{id:70143,n:"雙份米糕",h:2,min:50,max:65,t:3},
+ {id:70144,n:"山珍便當",h:4,min:90,max:100,t:1},{id:70145,n:"風味食盒",h:4,min:90,max:100,t:2},{id:70146,n:"分享點心籃",h:4,min:90,max:100,t:3},
+ {id:70147,n:"遠行乾糧包",h:8,min:140,max:165,t:1},{id:70148,n:"百味大餐盒",h:8,min:140,max:165,t:2},{id:70149,n:"團圓野餐籃",h:8,min:140,max:165,t:3},
+];
+const GUIDE=[
+ {id:70150,n:"隨心漫步手冊",places:[1,2]},{id:70151,n:"花田旅拍集",places:[1]},{id:70152,n:"市集地圖",places:[2]},
+ {id:70153,n:"度假日記",places:[3]},{id:70154,n:"小火車遊覽表",places:[4]},{id:70155,n:"荒野求生手冊",places:[5]},{id:70156,n:"安全繩佩戴指南",places:[6]},
+];
+const ITEM=[
+ {id:70157,n:"輕盈草帽",t:1},{id:70158,n:"風箏線軸",t:3},{id:70159,n:"紅燈籠",t:1},{id:70160,n:"遊園券",t:3},
+ {id:70161,n:"閃閃貝殼",t:1},{id:70162,n:"半個椰子",t:3},{id:70163,n:"精緻的車票",t:1},{id:70164,n:"祭典面具",t:3},
+ {id:70165,n:"火引子",t:1},{id:70166,n:"紅圍巾",t:3},{id:70167,n:"輕薄衣衫",t:1},{id:70168,n:"登山杖",t:3},
+];
+const XINXIN={id:70169,n:"尋新符",special:true};
+const PLACE={1:"晴野花原",2:"燈火古鎮",3:"晴沙椰灣",4:"楓燈町",5:"雲頂雪嶺",6:"雲海天門"};
+const PHOTO=[
+ {id:70170,p:1,t:1,bw:50,n:"花田追風"},{id:70171,p:1,t:1,bw:50,n:"溪畔失足"},{id:70172,p:1,t:2,bw:100,n:"花田食光"},{id:70173,p:1,t:3,bw:10,n:"乘風一刻"},
+ {id:70174,p:2,t:1,bw:50,n:"城門初到"},{id:70175,p:2,t:1,bw:50,n:"萬家燈火"},{id:70176,p:2,t:2,bw:100,n:"夜市嚐鮮"},{id:70177,p:2,t:3,bw:10,n:"粉墨登台"},
+ {id:70178,p:3,t:1,bw:50,n:"椰影晴灘"},{id:70179,p:3,t:1,bw:50,n:"金色潮線"},{id:70180,p:3,t:2,bw:100,n:"營火分魚"},{id:70181,p:3,t:3,bw:10,n:"浣浣臥沙"},{id:70182,p:3,t:3,bw:10,n:"椰落定律"},{id:70183,p:3,t:3,bw:10,n:"星夜同行"},
+ {id:70184,p:4,t:1,bw:50,n:"一葉知秋"},{id:70185,p:4,t:1,bw:50,n:"再抽一次"},{id:70186,p:4,t:2,bw:100,n:"茶暖楓庭"},{id:70187,p:4,t:3,bw:10,n:"風鈴祈語"},{id:70188,p:4,t:3,bw:10,n:"夜遊長街"},{id:70189,p:4,t:3,bw:10,n:"煙火照潮"},
+ {id:70190,p:5,t:1,bw:50,n:"寸步難行"},{id:70191,p:5,t:1,bw:50,n:"霜窗看雪"},{id:70192,p:5,t:2,bw:100,n:"再添一碗"},{id:70193,p:5,t:3,bw:10,n:"雪地救援"},{id:70194,p:5,t:3,bw:10,n:"極光之夜"},
+ {id:70195,p:6,t:1,bw:50,n:"無窮無盡"},{id:70196,p:6,t:1,bw:50,n:"安全第一"},{id:70197,p:6,t:2,bw:100,n:"午飯出逃"},{id:70198,p:6,t:3,bw:10,n:"仙鶴借杖"},{id:70199,p:6,t:3,bw:10,n:"雲中宮闕"},
+];
+const RCOL={1:"var(--r1)",2:"var(--r2)",3:"var(--r3)"};
+const $=id=>document.getElementById(id);
+function opt(v,label){const o=document.createElement("option");o.value=v;o.textContent=label;return o;}
+const fFood=$("s-food"),fGuide=$("s-guide"),fI1=$("s-i1"),fI2=$("s-i2");
+FOOD.forEach(f=>fFood.append(opt(f.id,`${f.n}（${f.h}h · 珍草${f.min}-${f.max} · 偏${RN[f.t]}）`)));
+GUIDE.forEach(g=>fGuide.append(opt(g.id,`${g.n} → ${g.places.map(p=>PLACE[p]).join("／")}`)));
+[fI1,fI2].forEach(sel=>{
+  sel.append(opt("","（空）"));
+  ITEM.forEach(it=>sel.append(opt(it.id,`${it.n}（偏${RN[it.t]}）`)));
+  sel.append(opt(String(XINXIN.id),"尋新符（解鎖新照片）"));
+});
+fFood.value=70149;fGuide.value=70153;fI1.value=70162;fI2.value=70164;
+function render(){
+  const food=FOOD.find(f=>f.id==fFood.value);
+  const guide=GUIDE.find(g=>g.id==fGuide.value);
+  const items=[fI1.value,fI2.value].filter(v=>v).map(v=>v==XINXIN.id?XINXIN:ITEM.find(i=>i.id==v));
+  const w={1:0,2:0,3:0};w[food.t]+=20;items.forEach(it=>{if(!it.special)w[it.t]+=100;});
+  const total=w[1]+w[2]+w[3]||1;
+  const hasXin=items.some(it=>it&&it.special);
+  const placeTxt=guide.places.map(p=>PLACE[p]).join(" / ");
+  const multi=guide.places.length>1;
+  let cand="";
+  guide.places.forEach(pid=>{
+    const ph=PHOTO.filter(p=>p.p===pid);
+    if(multi)cand+=`<h4 style="margin-top:10px">${PLACE[pid]}</h4>`;
+    [1,2,3].forEach(t=>{
+      const grp=ph.filter(p=>p.t===t);const sum=grp.reduce((a,b)=>a+b.bw,0);
+      grp.forEach(p=>{
+        const within=Math.round(p.bw/sum*100);
+        cand+=`<div class="photo${w[t]>0?' on':''}"><span class="rp r${t}">${RN[t]}</span>
+          <span class="nm">${p.n}<small>#${p.id}</small></span>
+          <span class="od">同級約 ${within}%</span></div>`;
+      });
+    });
+  });
+  const bar=t=>{const pct=Math.round(w[t]/total*100);
+    return `<div class="bar"><span>${RN[t]}</span>
+      <span class="track"><span class="fill" style="width:${pct}%;background:${RCOL[t]}"></span></span>
+      <span class="pct">${pct}%</span></div>`;};
+  $("res").innerHTML=`
+    <div class="row">
+      <div class="stat"><div class="l">旅行時長</div><div class="v">${food.h}<small> 小時</small></div></div>
+      <div class="stat"><div class="l">林間珍草</div><div class="v">${food.min}–${food.max}</div></div>
+      <div class="stat"><div class="l">前往地點</div><div class="v" style="font-size:1.1rem">${placeTxt}</div></div>
+    </div>
+    <p class="cap">稀有度偏向（設定表權重占比）</p>
+    <div class="bars">${bar(3)}${bar(2)}${bar(1)}</div>
+    <div class="cand"><h4>可能抽到的照片${multi?"（兩地各半機率）":""}　標亮＝你有偏向到的稀有度</h4>${cand}</div>
+    <div class="hint">${hasXin?'已帶 <b>尋新符</b>：可解鎖當地尚未取得的新照片。':'小提醒：帶 <b>尋新符</b> 可專門解鎖當地新照片。'}
+    想高機率拿稀有照：選有 3 張稀有的 <b>晴沙椰灣／楓燈町</b>，配兩個偏稀有的物件。</div>`;
+}
+[fFood,fGuide,fI1,fI2].forEach(s=>s.addEventListener("change",render));
+render();
+</script>
+</body>
+</html>
